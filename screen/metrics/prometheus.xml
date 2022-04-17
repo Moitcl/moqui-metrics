@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd"
+        standalone="true" render-modes="text" require-authentication="anonymous-all">
+
+    <pre-actions><script>sri.renderMode("text")</script></pre-actions>
+
+    <actions>
+        <script><![CDATA[
+            import java.lang.management.ManagementFactory
+
+            // Memory
+            memoryMXBean = ManagementFactory.getMemoryMXBean()
+            heapMemoryUsage = memoryMXBean.getHeapMemoryUsage()
+            moquiMemoryHeapUsage = heapMemoryUsage.getUsed() as String
+            moquiMemoryHeapMax = heapMemoryUsage.getMax() as String
+            if (moquiMemoryHeapMax) moquiMemoryHeapMax = "NaN"
+            moquiMemoryHeapCommitted = heapMemoryUsage.getCommitted() as String
+            nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage()
+            moquiMemoryNonHeapUsage = nonHeapMemoryUsage.getUsed() as String
+            moquiMemoryNonHeapMax = nonHeapMemoryUsage.getMax() as String
+            if (moquiMemoryNonHeapMax) moquiMemoryNonHeapMax = "NaN"
+            moquiMemoryNonHeapCommitted = nonHeapMemoryUsage.getCommitted() as String
+
+            // JVM data
+            runtimeMXBean = ManagementFactory.getRuntimeMXBean()
+            moquiJvmUptime = runtimeMXBean.getUptime() as String
+
+            // OS data
+            osMXBean = ManagementFactory.getOperatingSystemMXBean()
+            moquiOsLoad = osMXBean.getSystemLoadAverage() as String
+            moquiOsAvailableProcessors = osMXBean.getAvailableProcessors()
+
+            // Garbage Collector
+            gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans()
+            gcCount = 0
+            gcTime = 0
+            for (gcMXBean in gcMXBeans) {
+                gcCount += gcMXBean.getCollectionCount()
+                gcTime += gcMXBean.getCollectionTime()
+            }
+            gcCountString = gcCount as String
+            gcTimeString = gcTime as String
+
+            jitMXBean = ManagementFactory.getCompilationMXBean()
+            jitCompileTime = jitMXBean.getTotalCompilationTime() as String
+
+            classMXBean = ManagementFactory.getClassLoadingMXBean()
+            jvmClassesLoaded = classMXBean.getLoadedClassCount() as String
+            jvmTotalClassesLoaded = classMXBean.getTotalLoadedClassCount() as String
+            jvmClassesUnloaded = classMXBean.getUnloadedClassCount() as String
+
+            threadMXBean = ManagementFactory.getThreadMXBean()
+            jvmThreadCount = threadMXBean.getThreadCount() as String
+            jvmPeakThreadCount = threadMXBean.getPeakThreadCount() as String
+            jvmTotalStartedThreadCount = threadMXBean.getTotalStartedThreadCount() as String
+            metrics = []
+
+            cpuArch = osMXBean.getArch().replace('\\', '\\\\').replace('"', '\\"')
+            osName = osMXBean.getName().replace('\\', '\\\\').replace('"', '\\"')
+            osVersion = osMXBean.getVersion().replace('\\', '\\\\').replace('"', '\\"')
+            jvmSpecVersion = runtimeMXBean.getSpecVersion().replace('\\', '\\\\').replace('"', '\\"')
+            jvmVendor = runtimeMXBean.getVmVendor().replace('\\', '\\\\').replace('"', '\\"')
+            jvmVersion = runtimeMXBean.getVmVersion().replace('\\', '\\\\').replace('"', '\\"')
+            moquiVersion = ec.factory.moquiVersion.replace('\\', '\\\\').replace('"', '\\"')
+
+            componentInfoList = ec.factory.componentInfoList
+            runtimeVersionMap = ec.factory.getVersionMap()
+            frameworkLocation = new java.io.File(".").getCanonicalPath().replace('\\', '\\\\').replace('"', '\\"')
+            componentInfoList.add([name: 'framework', artifactType: 'framework', location: frameworkLocation, versionMap: runtimeVersionMap?.framework])
+            componentInfoList.add([name: 'runtime', artifactType: 'runtime', location: ec.factory.runtimePath.replace('\\', '\\\\').replace('"', '\\"'), versionMap: runtimeVersionMap?.runtime])
+            ec.logger.info("componentInfoList: ${componentInfoList}")
+            artifactList = []
+            componentInfoList.each { artifact ->
+                artifactVersionLabels = artifact.versionMap.collect { key, value ->
+                    return "git_" + key + "=\"" + (value ? (value.replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\"")
+                }.join(",")
+                artifactName = artifact.name.replace('\\', '\\\\').replace('"', '\\"')
+                artifactType = artifact.artifactType ?: 'component'
+                artifactDependsOnNames = artifact.dependsOnNames ? artifact.dependsOnNames.join(",") : ""
+                artifactList.add("artifact_name=\"${artifactName}\",artifactType=\"${artifactType}\",artifact_location=\"${artifact.location ?: ''}\",depends_on_names=\"${artifactDependsOnNames}\"${artifactVersionLabels ? ',' + artifactVersionLabels : ''}")
+            }
+
+            // Worker Pool
+            workerPool = ec.factory.workerPool
+            workerPoolCurrent = workerPool.getPoolSize() as String
+            workerPoolActive = workerPool.getActiveCount() as String
+            workerPoolQueueSize = workerPool.queue.size() as String
+            workerPoolQueueRemainingCapacity = workerPool.queue.remainingCapacity() as String
+
+            dataSources = []
+            ec.entity.getDataSourcesInfo().each { dataSource ->
+                dataSourceLabels = new StringBuffer()
+                dataSourceLabels.append("group=\"${dataSource.group.replace('\\', '\\\\').replace('"', '\\"')}\"")
+                dataSourceLabels.append(",unique_name=\"${dataSource.uniqueName.replace('\\', '\\\\').replace('"', '\\"')}\"")
+                dataSourceLabels.append(",database=\"${dataSource.database.replace('\\', '\\\\').replace('"', '\\"')}\"")
+                dataSourceDetail = dataSource.detail
+                if (dataSourceDetail) {
+                    detailLabels = dataSourceDetail.collect { key, value ->
+                        return "detail_${key}=\"" + value.replace('\\', '\\\\').replace('"', '\\"') + "\""
+                    }.join(",")
+                    dataSourceLabels.append("," + detailLabels)
+                }
+                dataSources.add(dataSourceLabels)
+            }
+
+            esServerInfoList = []
+            if (ec.elastic) {
+                ec.elastic.getClientList().each { esClient ->
+                    try {
+                        esServerInfo = esClient.getServerInfo()
+                        if (esServerInfo) {
+                            esServerInfo.clientClusterName = esClient.getClusterName()
+                            esServerInfo.clusterLocation = esClient.getClusterLocation()
+                        }
+                    } catch (Throwable t) {
+                        ec.logger.error("Error getting info for Elastic Client", t)
+                        esServerInfo = [clientClusterName: esClient.getClusterName(), clusterLocation  : esClient.getClusterLocation(), name: t.toString(), cluster_name: 'ERROR']
+                    }
+                    esServerInfoList.add(esServerInfo.collect { key, value ->
+                        if (value instanceof Map) {
+                            return value.collect { innerKey, innerValue ->
+                                return "${key}_${innerKey}=\"" + (innerValue? (innerValue.replace('\\', '\\\\').replace('"', '\\"')) : "") + "\""
+                            }.join(",")
+                        } else
+                            return "${key}=\"" + (value? (value.replace('\\', '\\\\').replace('"', '\\"')) : "") + "\""
+                    }.join(","))
+                }
+            }
+
+            hzToolFactory = ec.factory.getToolFactory('Hazelcast')
+            hazelcastInstance = hzToolFactory?.getInstance()
+            if (hazelcastInstance != null) {
+                cluster = hazelcastInstance.getCluster()
+                hazelcastLabels = "version=\"${cluster.getClusterVersion()}\",status=\"${cluster.getClusterState()}\""
+                hzDciToolFactory = ec.factory.getToolFactory('HazelcastDciTopic')
+                hazelcastMemberLabels = cluster.getMembers().collect { member ->
+                    return "address=\"${member.getAddress()}\",version=\"${member.getVersion()}\",is_local=\"${member.localMember() as String}\""
+                }
+
+            }
+            hzDciToolFactory = ec.factory.getToolFactory('HazelcastDciTopic')
+            if (hzDciToolFactory) {
+                hazelcastDciPublishedCount = hzDciToolFactory.getDciPublished() as String
+                hazelcastDciLastPublishTimestamp = hzDciToolFactory.getLastPublishTime()?:"NaN" as String
+                hazelcastDciReceivedCount = hzDciToolFactory.getDciReceived() as String
+                hazelcastDciLastReceiveTimestamp = hzDciToolFactory.getLastReceiveTime()?:"NaN" as String
+            }
+
+
+            ]]></script>
+    </actions>
+
+    <widgets>
+        <render-mode><text type="text" no-boundary-comment="true">
+#HELP moqui_memory_heap_usage_bytes Amount of heap memory used, in bytes
+#TYPE moqui_memory_heap_usage_bytes gauge
+moqui_memory_heap_usage_bytes ${moquiMemoryHeapUsage}
+#HELP moqui_memory_heap_max_bytes Maximum amount of heap memory in bytes that can be used for memory management. This amount of memory is not guaranteed to be available for memory management if it is greater than the amount of committed memory.
+#TYPE moqui_memory_heap_max_bytes gauge
+moqui_memory_heap_max_bytes ${moquiMemoryHeapMax}
+#HELP moqui_memory_heap_committed_bytes Amount of heap memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use.
+#TYPE moqui_memory_heap_committed_bytes gauge
+moqui_memory_heap_committed_bytes ${moquiMemoryHeapCommitted}
+#HELP moqui_memory_nonheap_usage_bytes Amount of non-heap memory used, in bytes
+#TYPE moqui_memory_nonheap_usage_bytes gauge
+moqui_memory_nonheap_usage_bytes ${moquiMemoryNonHeapUsage}
+#HELP moqui_memory_nonheap_max_bytes Maximum amount of non-heap memory in bytes that can be used for memory management. This amount of memory is not guaranteed to be available for memory management if it is greater than the amount of committed memory.
+#TYPE moqui_memory_nonheap_max_bytes gauge
+moqui_memory_nonheap_max_bytes ${moquiMemoryNonHeapMax}
+#HELP moqui_memory_nonheap_committed_bytes Amount of non-heap memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use.
+#TYPE moqui_memory_nonheap_committed_bytes gauge
+moqui_memory_nonheap_committed_bytes ${moquiMemoryNonHeapCommitted}
+#HELP moqui_jvm_uptime_milliseconds Uptime of the Java virtual machine in milliseconds
+#TYPE moqui_jvm_uptime_milliseconds counter
+moqui_jvm_uptime_milliseconds {} ${moquiJvmUptime}
+#HELP moqui_os_load System load average for the last minute
+#TYPE moqui_os_load gauge
+moqui_os_load ${moquiOsLoad}
+#HELP moqui_os_processors_available_cores Number of processors available to the Java virtual machine
+#TYPE moqui_os_processors_available_cores gauge
+moqui_os_processors_available_cores ${moquiOsAvailableProcessors}
+#HELP moqui_memory_gc_count Total number of collections that have occurred
+#TYPE moqui_memory_gc_count counter
+moqui_memory_gc_count ${gcCountString}
+#HELP moqui_memory_gc_time_milliseconds Approximate accumulated collection elapsed time in milliseconds
+#TYPE moqui_memory_gc_time_milliseconds counter
+moqui_memory_gc_time_milliseconds ${gcTimeString}
+#HELP moqui_memory_jit_compile_time_milliseconds Approximate accumulated elapsed time (in milliseconds) spent in compilation
+#TYPE moqui_memory_jit_compile_time_milliseconds counter
+moqui_memory_jit_compile_time_milliseconds ${jitCompileTime}
+#HELP moqui_jvm_classes_loaded Number of classes that are currently loaded in the Java virtual machine
+#TYPE moqui_jvm_classes_loaded gauge
+moqui_jvm_classes_loaded ${jvmClassesLoaded}
+#HELP moqui_jvm_classes_loaded_total Total number of classes that have been loaded since the Java virtual machine has started execution
+#TYPE moqui_jvm_classes_loaded_total counter
+moqui_jvm_classes_loaded_total ${jvmTotalClassesLoaded}
+#HELP moqui_jvm_classes_unloaded Total number of classes unloaded since the Java virtual machine has started execution
+#TYPE moqui_jvm_classes_unloaded counter
+moqui_jvm_classes_unloaded ${jvmClassesUnloaded}
+#HELP moqui_jvm_thread_count Current number of live threads including both daemon and non-daemon threads
+#TYPE moqui_jvm_thread_count gauge
+moqui_jvm_thread_count ${jvmThreadCount}
+#HELP moqui_jvm_thread_count_peak Peak live thread count since the Java virtual machine started or peak was reset
+#TYPE moqui_jvm_thread_count_peak counter
+moqui_jvm_thread_count_peak ${jvmThreadCount}
+#HELP moqui_jvm_thread_started_total Total number of threads created and also started since the Java virtual machine started
+#TYPE moqui_jvm_thread_started_total counter
+moqui_jvm_thread_started_total ${jvmTotalStartedThreadCount}
+#HELP moqui_workerpool_current Current number of threads in the worker pool
+#TYPE moqui_workerpool_current gauge
+moqui_workerpool_current ${workerPoolCurrent}
+#HELP moqui_workerpool_active Approximate number of threads that are actively executing tasks in the worker pool
+#TYPE moqui_workerpool_active gauge
+moqui_workerpool_active ${workerPoolActive}
+#HELP moqui_workerpool_queue_size Number of tasks queued for worker pool
+#TYPE moqui_workerpool_queue_size gauge
+moqui_workerpool_queue_size ${workerPoolQueueSize}
+#HELP moqui_workerpool_queue_remaining_capacity Number of slots available to queue tasks for worker pool
+#TYPE moqui_workerpool_queue_remaining_capacity gauge
+moqui_workerpool_remaining_capacity ${workerPoolQueueRemainingCapacity}
+
+#HELP moqui_info General information about the moqui instance
+moqui_info {moqui_version="${moquiVersion}",cpu_arch="${cpuArch}",os_name="${osName}",os_version="${osVersion}",jvm_spec_version="${jvmSpecVersion}",jvm_vendor="${jvmVendor}",jvm_version="${jvmVersion}"} 1
+
+# Artifact versions
+#HELP moqui_artifact_detail Framework, runtime and component details
+</text></render-mode>
+        <section-iterate name="ArtifactDetail" list="artifactList" entry="artifact">
+            <widgets><render-mode><text type="text" no-boundary-comment="true">
+                moqui_artifact_detail {${artifact}} 1
+            </text></render-mode></widgets>
+        </section-iterate>
+<render-mode><text type="text" no-boundary-comment="true">
+# Data Sources
+#HELP moqui_datasource_info Data Source
+</text></render-mode>
+        <section-iterate name="DataSources" list="dataSources" entry="datasource">
+            <widgets><render-mode><text type="text" no-boundary-comment="true">
+                moqui_datasource_info {${datasource}} 1
+            </text></render-mode></widgets>
+        </section-iterate>
+<render-mode><text type="text" no-boundary-comment="true">
+# Data Sources
+#HELP moqui_elasticsearch_server_info Data Source
+</text></render-mode>
+        <section-iterate name="ElasticSearch" list="esServerInfoList" entry="elasticServer">
+            <widgets><render-mode><text type="text" no-boundary-comment="true">
+                moqui_elasticsearch_server_info {${elasticServer}} 1
+            </text></render-mode></widgets>
+        </section-iterate>
+
+<render-mode><text type="text" no-boundary-comment="true">
+#HELP moqui_hazelcast_info Hazelcast cluster info
+moqui_moqui_hazelcast_info {${hazelcastLabels}} 1
+#HELP moqui_hazelcast_dci_published_count Dci published count
+#TYPE moqui_hazelcast_dci_published_count counter
+moqui_hazelcast_dci_published_count ${hazelcastDciPublishedCount}
+#HELP moqui_hazelcast_dci_published_last_timestamp Dci last publish timestamp
+#TYPE moqui_hazelcast_dci_published_last_timestamp gauge
+moqui_hazelcast_dci_published_last_timestamp ${hazelcastDciLastPublishTimestamp}
+#HELP moqui_hazelcast_dci_received_count Dci received count
+#TYPE moqui_hazelcast_dci_received_count counter
+moqui_hazelcast_dci_received_count ${hazelcastDciReceivedCount}
+#HELP moqui_hazelcast_dci_received_last_timestamp Dci last receive timestamp
+#TYPE moqui_hazelcast_dci_received_last_timestamp gauge
+moqui_hazelcast_dci_received_last_timestamp ${hazelcastDciLastReceiveTimestamp}
+#HELP moqui_hazelcast_member Hazelcast cluster member
+</text></render-mode>
+        <section-iterate name="HazelcastMembers" list="hazelcastMemberLabels" entry="hazelcastMemberLabel">
+            <widgets><render-mode><text type="text" no-boundary-comment="true">
+moqui_hazelcast_member {${hazelcastMemberLabel}} 1
+            </text></render-mode></widgets>
+        </section-iterate>
+
+    </widgets>
+
+</screen>
