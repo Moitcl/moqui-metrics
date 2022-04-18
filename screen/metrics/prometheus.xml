@@ -42,6 +42,9 @@ along with this software (see the LICENSE.md file). If not, see
             osMXBean = ManagementFactory.getOperatingSystemMXBean()
             moquiOsLoad = osMXBean.getSystemLoadAverage() as String
             moquiOsAvailableProcessors = osMXBean.getAvailableProcessors()
+            def runtimeFile = new File(ec.factory.runtimePath)
+            diskFreeRuntime = runtimeFile.getFreeSpace() as String
+            diskTotalRuntime = runtimeFile.getTotalSpace() as String
 
             // Garbage Collector
             gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans()
@@ -159,8 +162,7 @@ along with this software (see the LICENSE.md file). If not, see
                 hazelcastDciLastReceiveTimestamp = (hzDciToolFactory.getLastReceiveTime()?:"NaN") as String
             }
 
-
-            ]]></script>
+        ]]></script>
     </actions>
 
     <widgets>
@@ -189,6 +191,12 @@ moqui_jvm_uptime_milliseconds {} ${moquiJvmUptime}
 #HELP moqui_os_load System load average for the last minute
 #TYPE moqui_os_load gauge
 moqui_os_load ${moquiOsLoad}
+#HELP moqui_os_disk_free_runtime_bytes Runtime disk free in bytes
+#TYPE moqui_os_disk_free_runtime_bytes gauge
+moqui_os_disk_free_runtime_bytes ${diskFreeRuntime}
+#HELP moqui_os_disk_total_runtime_bytes Runtime disk total in bytes
+#TYPE moqui_os_disk_total_runtime_bytes gauge
+moqui_os_disk_total_runtime_bytes ${diskTotalRuntime}
 #HELP moqui_os_processors_available_cores Number of processors available to the Java virtual machine
 #TYPE moqui_os_processors_available_cores gauge
 moqui_os_processors_available_cores ${moquiOsAvailableProcessors}

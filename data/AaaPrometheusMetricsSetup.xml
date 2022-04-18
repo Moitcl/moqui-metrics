@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<entity-facade-xml type="devel">
+<entity-facade-xml type="seed">
 
     <moqui.screen.SubscreensItem screenLocation="component://webroot/screen/webroot.xml" subscreenName="metrics" subscreenLocation="component://moqui-metrics/screen/metrics.xml"
                                  menuInclude="N"/>
