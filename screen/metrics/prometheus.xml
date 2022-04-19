@@ -23,7 +23,6 @@ along with this software (see the LICENSE.md file). If not, see
 
             allowedServerList = System.getProperty('metrics_prometheus_servers')? System.getProperty('metrics_prometheus_servers').replaceAll('\\s', '').split(',')+['127.0.0.1','0:0:0:0:0:0:0:1']: ['127.0.0.1','0:0:0:0:0:0:0:1']
             allowed = false
-            ec.logger.info("allowedServerList: ${allowedServerList}")
             allowedAddressList = []
             remoteAddress = ec.user.getClientIp()
             if (remoteAddress) {
@@ -186,6 +185,13 @@ along with this software (see the LICENSE.md file). If not, see
                 }
             }
             ]]></script>
+
+        <!-- Artifact Hits last 1 minute -->
+        <entity-find entity-name="moqui.server.ArtifactHit" list="hitList">
+            <econdition field-name="startDateTime" operator="greater-equals" from="ec.user.nowTimestamp.time-(2*60*1000)"/>
+            <econdition field-name="artifactType" value="AT_XML_SCREEN"/>
+            <econdition field-name="artifactName" value="component://webroot/screen/webroot.xml"/>
+        </entity-find>
     </actions>
 
     <widgets>
@@ -270,10 +276,10 @@ moqui_info {moqui_version="${moquiVersion}",cpu_arch="${cpuArch}",os_name="${osN
 
 # Artifact versions
 #HELP moqui_artifact_detail Framework, runtime and component details
-</text></render-mode>
+                </text></render-mode>
                 <section-iterate name="ArtifactDetail" list="artifactList" entry="artifact">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
-                        moqui_artifact_detail {${artifact}} 1
+moqui_artifact_detail {${artifact}} 1
                     </text></render-mode></widgets>
                 </section-iterate>
                 <render-mode><text type="text" no-boundary-comment="true">
@@ -282,7 +288,7 @@ moqui_info {moqui_version="${moquiVersion}",cpu_arch="${cpuArch}",os_name="${osN
                 </text></render-mode>
                 <section-iterate name="DataSources" list="dataSources" entry="datasource">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
-                        moqui_datasource_info {${datasource}} 1
+moqui_datasource_info {${datasource}} 1
                     </text></render-mode></widgets>
                 </section-iterate>
                 <render-mode><text type="text" no-boundary-comment="true">
@@ -291,7 +297,7 @@ moqui_info {moqui_version="${moquiVersion}",cpu_arch="${cpuArch}",os_name="${osN
                 </text></render-mode>
                 <section-iterate name="ElasticSearch" list="esServerInfoList" entry="elasticServer">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
-                        moqui_elasticsearch_server_info {${elasticServer}} 1
+moqui_elasticsearch_server_info {${elasticServer}} 1
                     </text></render-mode></widgets>
                 </section-iterate>
 
@@ -314,14 +320,37 @@ moqui_hazelcast_dci_received_last_timestamp ${hazelcastDciLastReceiveTimestamp}
                 </text></render-mode>
                 <section-iterate name="HazelcastMembers" list="hazelcastMemberLabels" entry="hazelcastMemberLabel">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
-                        moqui_hazelcast_member {${hazelcastMemberLabel}} 1
+moqui_hazelcast_member {${hazelcastMemberLabel}} 1
                     </text></render-mode></widgets>
+                </section-iterate>
+
+                <section name="HitHeader"><widgets>
+                    <render-mode><text type="text" no-boundary-comment="true">
+#HELP moqui_hit_webroot_runningtime_milliseconds Hits to webroot screen
+#TYPE moqui_hit_webroot_runningtime_milliseconds gauge
+                    </text></render-mode>
+                </widgets></section>
+                <section-iterate name="HitList" list="hitList" entry="hit">
+                    <actions>
+                        <script><![CDATA[
+                            hitLabels = hit.collect { key, value ->
+                                if (key != "runningTimeMillis")
+                                    return key + "=\"" + (value ? (value.toString().replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\"")
+                            }.join(",")
+                            hitRunningTime = hit.runningTimeMillis as String
+                            ]]></script>
+                    </actions>
+                    <widgets>
+                        <render-mode><text type="text" no-boundary-comment="true">
+moqui_hit_webroot_runningtime_milliseconds {${hitLabels}} ${hitRunningTime}
+                        </text></render-mode>
+                    </widgets>
                 </section-iterate>
 
             </widgets>
             <fail-widgets>
                 <render-mode><text type="text" no-boundary-comment="true">
-                    Rejecting metrics/prometheus from ${ec.web.getRequest().getRemoteAddr()}
+Rejecting metrics/prometheus from ${ec.web.getRequest().getRemoteAddr()}
                 </text></render-mode>
             </fail-widgets>
         </section>
