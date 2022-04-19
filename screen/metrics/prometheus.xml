@@ -106,7 +106,6 @@ along with this software (see the LICENSE.md file). If not, see
                 frameworkLocation = new java.io.File(".").getCanonicalPath().replace('\\', '\\\\').replace('"', '\\"')
                 componentInfoList.add([name: 'framework', artifactType: 'framework', location: frameworkLocation, versionMap: runtimeVersionMap?.framework])
                 componentInfoList.add([name: 'runtime', artifactType: 'runtime', location: ec.factory.runtimePath.replace('\\', '\\\\').replace('"', '\\"'), versionMap: runtimeVersionMap?.runtime])
-                ec.logger.info("componentInfoList: ${componentInfoList}")
                 artifactList = []
                 componentInfoList.each { artifact ->
                     artifactVersionLabels = artifact.versionMap.collect { key, value ->
