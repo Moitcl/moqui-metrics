@@ -333,10 +333,12 @@ moqui_hazelcast_member {${hazelcastMemberLabel}} 1
                 <section-iterate name="HitList" list="hitList" entry="hit">
                     <actions>
                         <script><![CDATA[
-                            hitLabels = hit.collect { key, value ->
+                            hitLabelList = []
+                            hitLabels = hit.each { key, value ->
                                 if (key != "runningTimeMillis")
-                                    return key + "=\"" + (value ? (value.toString().replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\"")
-                            }.join(",")
+                                    hitLabelList.add(key + "=\"" + (value ? (value.toString().replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\""))
+                            }
+                            hitLabels = hitLabelList.join(",")
                             hitRunningTime = hit.runningTimeMillis as String
                             ]]></script>
                     </actions>
