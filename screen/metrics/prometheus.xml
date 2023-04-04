@@ -14,6 +14,7 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         standalone="true" render-modes="text" require-authentication="anonymous-all">
+    <web-settings require-encryption="false"/>
 
     <pre-actions><script>sri.renderMode("text")</script></pre-actions>
 
