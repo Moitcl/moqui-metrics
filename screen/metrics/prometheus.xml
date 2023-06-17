@@ -111,8 +111,10 @@ along with this software (see the LICENSE.md file). If not, see
                 runtimeVersionMap = ec.factory.getVersionMap()
                 frameworkLocation = new java.io.File(".").getCanonicalPath().replace('\\', '\\\\').replace('"', '\\"')
                 if (componentInfoList != null) {
-                    componentInfoList.add([name: 'framework', artifactType: 'framework', location: frameworkLocation, versionMap: runtimeVersionMap?.framework])
-                    componentInfoList.add([name: 'runtime', artifactType: 'runtime', location: ec.factory.runtimePath.replace('\\', '\\\\').replace('"', '\\"'), versionMap: runtimeVersionMap?.runtime])
+                    try {
+                        componentInfoList.add([name: 'framework', artifactType: 'framework', location: frameworkLocation, versionMap: runtimeVersionMap?.framework])
+                        componentInfoList.add([name: 'runtime', artifactType: 'runtime', location: ec.factory.runtimePath.replace('\\', '\\\\').replace('"', '\\"'), versionMap: runtimeVersionMap?.runtime])
+                    } catch (NullPointerException e) {}
                 }
                 artifactList = []
                 componentInfoList.each { artifact ->
