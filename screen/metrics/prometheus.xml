@@ -54,12 +54,12 @@ along with this software (see the LICENSE.md file). If not, see
                 heapMemoryUsage = memoryMXBean.getHeapMemoryUsage()
                 moquiMemoryHeapUsage = heapMemoryUsage.getUsed() as String
                 moquiMemoryHeapMax = heapMemoryUsage.getMax() as String
-                if (moquiMemoryHeapMax) moquiMemoryHeapMax = "NaN"
+                if (!moquiMemoryHeapMax) moquiMemoryHeapMax = "NaN"
                 moquiMemoryHeapCommitted = heapMemoryUsage.getCommitted() as String
                 nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage()
                 moquiMemoryNonHeapUsage = nonHeapMemoryUsage.getUsed() as String
                 moquiMemoryNonHeapMax = nonHeapMemoryUsage.getMax() as String
-                if (moquiMemoryNonHeapMax) moquiMemoryNonHeapMax = "NaN"
+                if (!moquiMemoryNonHeapMax) moquiMemoryNonHeapMax = "NaN"
                 moquiMemoryNonHeapCommitted = nonHeapMemoryUsage.getCommitted() as String
 
                 // JVM data
