@@ -176,8 +176,8 @@ along with this software (see the LICENSE.md file). If not, see
         ]]></script>
 
         <!-- Artifact Hits last 1 minute -->
-        <entity-find entity-name="moqui.server.ArtifactHit" list="hitList">
-            <econdition field-name="startDateTime" operator="greater-equals" from="ec.user.nowTimestamp.time-(2*60*1000)"/>
+        <entity-find entity-name="moqui.server.ArtifactHit" list="hitList" cache="true">
+            <econdition field-name="startDateTime" operator="greater-equals" from="ec.user.nowTimestamp.time-(1*60*1000)"/>
             <econdition field-name="artifactType" value="AT_XML_SCREEN"/>
             <econdition field-name="artifactName" value="component://webroot/screen/webroot.xml"/>
         </entity-find>
