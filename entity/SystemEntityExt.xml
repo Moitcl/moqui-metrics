@@ -1,0 +1,7 @@
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <extend-entity entity-name="ArtifactHit" package="moqui.server">
+        <index name="START_DATE_TIME"><index-field name="startDateTime"/></index>
+    </extend-entity>
+
+</entities>
