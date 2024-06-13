@@ -181,6 +181,7 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="artifactType" value="AT_XML_SCREEN"/>
             <econdition field-name="artifactName" value="component://webroot/screen/webroot.xml"/>
         </entity-find>
+        <set field="queryTimestamp" from="ec.user.nowTimestamp.time as String"/>
     </actions>
 
     <widgets>
@@ -189,86 +190,86 @@ along with this software (see the LICENSE.md file). If not, see
                 <render-mode><text type="text" no-boundary-comment="true">
 #HELP moqui_memory_heap_usage_bytes Amount of heap memory used, in bytes
 #TYPE moqui_memory_heap_usage_bytes gauge
-moqui_memory_heap_usage_bytes ${moquiMemoryHeapUsage}
+moqui_memory_heap_usage_bytes ${moquiMemoryHeapUsage} ${queryTimestamp}
 #HELP moqui_memory_heap_max_bytes Maximum amount of heap memory in bytes that can be used for memory management. This amount of memory is not guaranteed to be available for memory management if it is greater than the amount of committed memory.
 #TYPE moqui_memory_heap_max_bytes gauge
-moqui_memory_heap_max_bytes ${moquiMemoryHeapMax}
+moqui_memory_heap_max_bytes ${moquiMemoryHeapMax} ${queryTimestamp}
 #HELP moqui_memory_heap_committed_bytes Amount of heap memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use.
 #TYPE moqui_memory_heap_committed_bytes gauge
-moqui_memory_heap_committed_bytes ${moquiMemoryHeapCommitted}
+moqui_memory_heap_committed_bytes ${moquiMemoryHeapCommitted} ${queryTimestamp}
 #HELP moqui_memory_nonheap_usage_bytes Amount of non-heap memory used, in bytes
 #TYPE moqui_memory_nonheap_usage_bytes gauge
-moqui_memory_nonheap_usage_bytes ${moquiMemoryNonHeapUsage}
+moqui_memory_nonheap_usage_bytes ${moquiMemoryNonHeapUsage} ${queryTimestamp}
 #HELP moqui_memory_nonheap_max_bytes Maximum amount of non-heap memory in bytes that can be used for memory management. This amount of memory is not guaranteed to be available for memory management if it is greater than the amount of committed memory.
 #TYPE moqui_memory_nonheap_max_bytes gauge
-moqui_memory_nonheap_max_bytes ${moquiMemoryNonHeapMax}
+moqui_memory_nonheap_max_bytes ${moquiMemoryNonHeapMax} ${queryTimestamp}
 #HELP moqui_memory_nonheap_committed_bytes Amount of non-heap memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use.
 #TYPE moqui_memory_nonheap_committed_bytes gauge
-moqui_memory_nonheap_committed_bytes ${moquiMemoryNonHeapCommitted}
+moqui_memory_nonheap_committed_bytes ${moquiMemoryNonHeapCommitted} ${queryTimestamp}
 #HELP moqui_jvm_uptime_milliseconds Uptime of the Java virtual machine in milliseconds
 #TYPE moqui_jvm_uptime_milliseconds counter
-moqui_jvm_uptime_milliseconds {} ${moquiJvmUptime}
+moqui_jvm_uptime_milliseconds {} ${moquiJvmUptime} ${queryTimestamp}
 #HELP moqui_os_load System load average for the last minute
 #TYPE moqui_os_load gauge
-moqui_os_load ${moquiOsLoad}
+moqui_os_load ${moquiOsLoad} ${queryTimestamp}
 #HELP moqui_os_disk_free_runtime_bytes Runtime disk free in bytes
 #TYPE moqui_os_disk_free_runtime_bytes gauge
-moqui_os_disk_free_runtime_bytes ${diskFreeRuntime}
+moqui_os_disk_free_runtime_bytes ${diskFreeRuntime} ${queryTimestamp}
 #HELP moqui_os_disk_total_runtime_bytes Runtime disk total in bytes
 #TYPE moqui_os_disk_total_runtime_bytes gauge
-moqui_os_disk_total_runtime_bytes ${diskTotalRuntime}
+moqui_os_disk_total_runtime_bytes ${diskTotalRuntime} ${queryTimestamp}
 #HELP moqui_os_processors_available_cores Number of processors available to the Java virtual machine
 #TYPE moqui_os_processors_available_cores gauge
-moqui_os_processors_available_cores ${moquiOsAvailableProcessors}
+moqui_os_processors_available_cores ${moquiOsAvailableProcessors} ${queryTimestamp}
 #HELP moqui_memory_gc_count Total number of collections that have occurred
 #TYPE moqui_memory_gc_count counter
-moqui_memory_gc_count ${gcCountString}
+moqui_memory_gc_count ${gcCountString} ${queryTimestamp}
 #HELP moqui_memory_gc_time_milliseconds Approximate accumulated collection elapsed time in milliseconds
 #TYPE moqui_memory_gc_time_milliseconds counter
-moqui_memory_gc_time_milliseconds ${gcTimeString}
+moqui_memory_gc_time_milliseconds ${gcTimeString} ${queryTimestamp}
 #HELP moqui_memory_jit_compile_time_milliseconds Approximate accumulated elapsed time (in milliseconds) spent in compilation
 #TYPE moqui_memory_jit_compile_time_milliseconds counter
-moqui_memory_jit_compile_time_milliseconds ${jitCompileTime}
+moqui_memory_jit_compile_time_milliseconds ${jitCompileTime} ${queryTimestamp}
 #HELP moqui_jvm_classes_loaded Number of classes that are currently loaded in the Java virtual machine
 #TYPE moqui_jvm_classes_loaded gauge
-moqui_jvm_classes_loaded ${jvmClassesLoaded}
+moqui_jvm_classes_loaded ${jvmClassesLoaded} ${queryTimestamp}
 #HELP moqui_jvm_classes_loaded_total Total number of classes that have been loaded since the Java virtual machine has started execution
 #TYPE moqui_jvm_classes_loaded_total counter
-moqui_jvm_classes_loaded_total ${jvmTotalClassesLoaded}
+moqui_jvm_classes_loaded_total ${jvmTotalClassesLoaded} ${queryTimestamp}
 #HELP moqui_jvm_classes_unloaded Total number of classes unloaded since the Java virtual machine has started execution
 #TYPE moqui_jvm_classes_unloaded counter
-moqui_jvm_classes_unloaded ${jvmClassesUnloaded}
+moqui_jvm_classes_unloaded ${jvmClassesUnloaded} ${queryTimestamp}
 #HELP moqui_jvm_thread_count Current number of live threads including both daemon and non-daemon threads
 #TYPE moqui_jvm_thread_count gauge
-moqui_jvm_thread_count ${jvmThreadCount}
+moqui_jvm_thread_count ${jvmThreadCount} ${queryTimestamp}
 #HELP moqui_jvm_thread_count_peak Peak live thread count since the Java virtual machine started or peak was reset
 #TYPE moqui_jvm_thread_count_peak counter
-moqui_jvm_thread_count_peak ${jvmThreadCount}
+moqui_jvm_thread_count_peak ${jvmThreadCount} ${queryTimestamp}
 #HELP moqui_jvm_thread_started_total Total number of threads created and also started since the Java virtual machine started
 #TYPE moqui_jvm_thread_started_total counter
-moqui_jvm_thread_started_total ${jvmTotalStartedThreadCount}
+moqui_jvm_thread_started_total ${jvmTotalStartedThreadCount} ${queryTimestamp}
 #HELP moqui_workerpool_current Current number of threads in the worker pool
 #TYPE moqui_workerpool_current gauge
-moqui_workerpool_current ${workerPoolCurrent}
+moqui_workerpool_current ${workerPoolCurrent} ${queryTimestamp}
 #HELP moqui_workerpool_active Approximate number of threads that are actively executing tasks in the worker pool
 #TYPE moqui_workerpool_active gauge
-moqui_workerpool_active ${workerPoolActive}
+moqui_workerpool_active ${workerPoolActive} ${queryTimestamp}
 #HELP moqui_workerpool_queue_size Number of tasks queued for worker pool
 #TYPE moqui_workerpool_queue_size gauge
-moqui_workerpool_queue_size ${workerPoolQueueSize}
+moqui_workerpool_queue_size ${workerPoolQueueSize} ${queryTimestamp}
 #HELP moqui_workerpool_queue_remaining_capacity Number of slots available to queue tasks for worker pool
 #TYPE moqui_workerpool_queue_remaining_capacity gauge
-moqui_workerpool_remaining_capacity ${workerPoolQueueRemainingCapacity}
+moqui_workerpool_remaining_capacity ${workerPoolQueueRemainingCapacity} ${queryTimestamp}
 
 #HELP moqui_info General information about the moqui instance
-moqui_info {moqui_version="${moquiVersion}",cpu_arch="${cpuArch}",os_name="${osName}",os_version="${osVersion}",jvm_spec_version="${jvmSpecVersion}",jvm_vendor="${jvmVendor}",jvm_version="${jvmVersion}"} 1
+moqui_info {moqui_version="${moquiVersion}",cpu_arch="${cpuArch}",os_name="${osName}",os_version="${osVersion}",jvm_spec_version="${jvmSpecVersion}",jvm_vendor="${jvmVendor}",jvm_version="${jvmVersion}"} 1 ${queryTimestamp}
 
 # Artifact versions
 #HELP moqui_artifact_detail Framework, runtime and component details
                 </text></render-mode>
                 <section-iterate name="ArtifactDetail" list="artifactList" entry="artifact">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
-moqui_artifact_detail {${artifact}} 1
+moqui_artifact_detail {${artifact}} 1 ${queryTimestamp}
                     </text></render-mode></widgets>
                 </section-iterate>
                 <render-mode><text type="text" no-boundary-comment="true">
@@ -277,7 +278,7 @@ moqui_artifact_detail {${artifact}} 1
                 </text></render-mode>
                 <section-iterate name="DataSources" list="dataSources" entry="datasource">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
-moqui_datasource_info {${datasource}} 1
+moqui_datasource_info {${datasource}} 1 ${queryTimestamp}
                     </text></render-mode></widgets>
                 </section-iterate>
                 <render-mode><text type="text" no-boundary-comment="true">
@@ -286,30 +287,30 @@ moqui_datasource_info {${datasource}} 1
                 </text></render-mode>
                 <section-iterate name="ElasticSearch" list="esServerInfoList" entry="elasticServer">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
-moqui_elasticsearch_server_info {${elasticServer}} 1
+moqui_elasticsearch_server_info {${elasticServer}} 1 ${queryTimestamp}
                     </text></render-mode></widgets>
                 </section-iterate>
 
                 <render-mode><text type="text" no-boundary-comment="true">
 #HELP moqui_hazelcast_info Hazelcast cluster info
-moqui_moqui_hazelcast_info {${hazelcastLabels}} 1
+moqui_moqui_hazelcast_info {${hazelcastLabels}} 1 ${queryTimestamp}
 #HELP moqui_hazelcast_dci_published_count Dci published count
 #TYPE moqui_hazelcast_dci_published_count counter
-moqui_hazelcast_dci_published_count ${hazelcastDciPublishedCount}
+moqui_hazelcast_dci_published_count ${hazelcastDciPublishedCount} ${queryTimestamp}
 #HELP moqui_hazelcast_dci_published_last_timestamp Dci last publish timestamp
 #TYPE moqui_hazelcast_dci_published_last_timestamp gauge
-moqui_hazelcast_dci_published_last_timestamp ${hazelcastDciLastPublishTimestamp}
+moqui_hazelcast_dci_published_last_timestamp ${hazelcastDciLastPublishTimestamp} ${queryTimestamp}
 #HELP moqui_hazelcast_dci_received_count Dci received count
 #TYPE moqui_hazelcast_dci_received_count counter
-moqui_hazelcast_dci_received_count ${hazelcastDciReceivedCount}
+moqui_hazelcast_dci_received_count ${hazelcastDciReceivedCount} ${queryTimestamp}
 #HELP moqui_hazelcast_dci_received_last_timestamp Dci last receive timestamp
 #TYPE moqui_hazelcast_dci_received_last_timestamp gauge
-moqui_hazelcast_dci_received_last_timestamp ${hazelcastDciLastReceiveTimestamp}
+moqui_hazelcast_dci_received_last_timestamp ${hazelcastDciLastReceiveTimestamp} ${queryTimestamp}
 #HELP moqui_hazelcast_member Hazelcast cluster member
                 </text></render-mode>
                 <section-iterate name="HazelcastMembers" list="hazelcastMemberLabels" entry="hazelcastMemberLabel">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
-moqui_hazelcast_member {${hazelcastMemberLabel}} 1
+moqui_hazelcast_member {${hazelcastMemberLabel}} 1 ${queryTimestamp}
                     </text></render-mode></widgets>
                 </section-iterate>
 
@@ -329,11 +330,11 @@ moqui_hazelcast_member {${hazelcastMemberLabel}} 1
                             }
                             hitLabels = hitLabelList.join(",")
                             hitRunningTime = hit.runningTimeMillis as String
-                            ]]></script>
+                        ]]></script>
                     </actions>
                     <widgets>
                         <render-mode><text type="text" no-boundary-comment="true">
-moqui_hit_webroot_runningtime_milliseconds {${hitLabels}} ${hitRunningTime}
+moqui_hit_webroot_runningtime_milliseconds {${hitLabels}} ${hitRunningTime} ${queryTimestamp}
                         </text></render-mode>
                     </widgets>
                 </section-iterate>
