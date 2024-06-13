@@ -96,13 +96,15 @@ along with this software (see the LICENSE.md file). If not, see
                 }
                 artifactList = []
                 componentInfoList.each { artifact ->
-                    artifactVersionLabels = artifact.versionMap.collect { key, value ->
-                        return "git_" + key + "=\"" + (value ? (value.replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\"")
-                    }.join(",")
-                    artifactName = artifact.name.replace('\\', '\\\\').replace('"', '\\"')
-                    artifactType = artifact.artifactType ?: 'component'
-                    artifactDependsOnNames = artifact.dependsOnNames ? artifact.dependsOnNames.join(",") : ""
-                    artifactList.add("artifact_name=\"${artifactName}\",artifactType=\"${artifactType}\",artifact_location=\"${artifact.location ?: ''}\",depends_on_names=\"${artifactDependsOnNames}\"${artifactVersionLabels ? ',' + artifactVersionLabels : ''}")
+                    if (artifact.versionMap) {
+                        artifactVersionLabels = artifact.versionMap.collect { key, value ->
+                            return "git_" + key + "=\"" + (value ? (value.replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\"")
+                        }.join(",")
+                        artifactName = artifact.name.replace('\\', '\\\\').replace('"', '\\"')
+                        artifactType = artifact.artifactType ?: 'component'
+                        artifactDependsOnNames = artifact.dependsOnNames ? artifact.dependsOnNames.join(",") : ""
+                        artifactList.add("artifact_name=\"${artifactName}\",artifactType=\"${artifactType}\",artifact_location=\"${artifact.location ?: ''}\",depends_on_names=\"${artifactDependsOnNames}\"${artifactVersionLabels ? ',' + artifactVersionLabels : ''}")
+                    }
                 }
 
                 // Worker Pool
