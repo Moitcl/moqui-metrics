@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="check" noun="Client">
+        <out-parameters>
+            <parameter name="allowed" type="Boolean"/>
+            <parameter name="finished" type="Boolean"/>
+        </out-parameters>
+        <actions>
+            <set field="allowed" from="false"/>
+            <set field="finished" from="false"/>
+            <script><![CDATA[
+                import java.lang.management.ManagementFactory
+
+                allowedServerList = System.getProperty('metrics_prometheus_servers')? System.getProperty('metrics_prometheus_servers').replaceAll('\\s', '').split(',')+['127.0.0.1','0:0:0:0:0:0:0:1']: ['private','0:0:0:0:0:0:0:1']
+                allowed = false
+                allowedAddressList = []
+                remoteAddress = ec.user.getClientIp()
+                if (remoteAddress) {
+
+                    allowedServerList.each { host ->
+                        try {
+                            if (host == "private") {
+                                if (remoteAddress.matches("((^127\\.)|(^10\\.)|(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|(^172\\.3[0-1]\\.)|(^192\\.168\\.)).*"))
+                                    allowed = true
+                            } else {
+                                hostAddressArray = java.net.InetAddress.getAllByName(host)
+                                for (int i = 0; i < hostAddressArray.size(); i++) {
+                                    hostAddress = hostAddressArray[i]
+                                    ipAddressString = hostAddress.toString().replaceAll(".*/", "")
+                                    if (remoteAddress.equals(ipAddressString))
+                                        allowed = true
+                                }
+                            }
+                        } catch (java.net.UnknownHostException e) {
+                            ec.logger.warn("Unknown host: ${host}")
+                        }
+                    }
+                }
+            ]]></script>
+            <set field="finished" from="true"/>
+        </actions>
+    </service>
+
+</services>

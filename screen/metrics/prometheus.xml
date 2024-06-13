@@ -19,34 +19,12 @@ along with this software (see the LICENSE.md file). If not, see
     <pre-actions><script>sri.renderMode("text")</script></pre-actions>
 
     <actions>
+        <service-call name="metrics.MetricsServices.check#Client" out-map="context" ignore-error="true" transaction="force-new" transaction-timeout="1"/>
+        <if condition="!finished">
+            <log message="Could not check Client"/>
+        </if>
         <script><![CDATA[
             import java.lang.management.ManagementFactory
-
-            allowedServerList = System.getProperty('metrics_prometheus_servers')? System.getProperty('metrics_prometheus_servers').replaceAll('\\s', '').split(',')+['127.0.0.1','0:0:0:0:0:0:0:1']: ['private','0:0:0:0:0:0:0:1']
-            allowed = false
-            allowedAddressList = []
-            remoteAddress = ec.user.getClientIp()
-            if (remoteAddress) {
-
-                allowedServerList.each { host ->
-                    try {
-                        if (host == "private") {
-                            if (remoteAddress.matches("((^127\\.)|(^10\\.)|(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|(^172\\.3[0-1]\\.)|(^192\\.168\\.)).*"))
-                                allowed = true
-                        } else {
-                            hostAddressArray = java.net.InetAddress.getAllByName(host)
-                            for (int i = 0; i < hostAddressArray.size(); i++) {
-                                hostAddress = hostAddressArray[i]
-                                ipAddressString = hostAddress.toString().replaceAll(".*/", "")
-                                if (remoteAddress.equals(ipAddressString))
-                                    allowed = true
-                            }
-                        }
-                    } catch (java.net.UnknownHostException e) {
-                        ec.logger.warn("Unknown host: ${host}")
-                    }
-                }
-            }
 
             if (allowed) {
                 // Memory
@@ -195,7 +173,7 @@ along with this software (see the LICENSE.md file). If not, see
                     hazelcastDciLastReceiveTimestamp = (hzDciToolFactory.getLastReceiveTime() ?: "NaN") as String
                 }
             }
-            ]]></script>
+        ]]></script>
 
         <!-- Artifact Hits last 1 minute -->
         <entity-find entity-name="moqui.server.ArtifactHit" list="hitList">
