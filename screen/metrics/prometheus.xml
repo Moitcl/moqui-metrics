@@ -23,108 +23,110 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="!finished">
             <log message="Could not check Client"/>
         </if>
-        <script><![CDATA[
-            import java.lang.management.ManagementFactory
+        <if condition="allowed">
 
-            if (allowed) {
-                // Memory
-                memoryMXBean = ManagementFactory.getMemoryMXBean()
-                heapMemoryUsage = memoryMXBean.getHeapMemoryUsage()
-                moquiMemoryHeapUsage = heapMemoryUsage.getUsed() as String
-                moquiMemoryHeapMax = heapMemoryUsage.getMax() as String
-                if (!moquiMemoryHeapMax) moquiMemoryHeapMax = "NaN"
-                moquiMemoryHeapCommitted = heapMemoryUsage.getCommitted() as String
-                nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage()
-                moquiMemoryNonHeapUsage = nonHeapMemoryUsage.getUsed() as String
-                moquiMemoryNonHeapMax = nonHeapMemoryUsage.getMax() as String
-                if (!moquiMemoryNonHeapMax) moquiMemoryNonHeapMax = "NaN"
-                moquiMemoryNonHeapCommitted = nonHeapMemoryUsage.getCommitted() as String
+            <!-- Memory -->
+            <set field="memoryMXBean" from="java.lang.management.ManagementFactory.getMemoryMXBean()"/>
+            <set field="heapMemoryUsage" from="memoryMXBean.getHeapMemoryUsage()"/>
+            <set field="moquiMemoryHeapUsage" from="heapMemoryUsage.getUsed()" type="String"/>
+            <set field="moquiMemoryHeapMax" from="heapMemoryUsage.getMax()" type="String"/>
+            <if condition="!moquiMemoryHeapMax"><set field="moquiMemoryHeapMax" value="NaN"/></if>
+            <set field="moquiMemoryHeapCommitted" from="heapMemoryUsage.getCommitted()" type="String"/>
+            <set field="nonHeapMemoryUsage" from="memoryMXBean.getNonHeapMemoryUsage()"/>
+            <set field="moquiMemoryNonHeapUsage" from="nonHeapMemoryUsage.getUsed()" type="String"/>
+            <set field="moquiMemoryNonHeapMax" from="nonHeapMemoryUsage.getMax()" type="String"/>
+            <if condition="!moquiMemoryNonHeapMax"><set field="moquiMemoryNonHeapMax" value="NaN"/></if>
+            <set field="moquiMemoryNonHeapCommitted" from="nonHeapMemoryUsage.getCommitted()" type="String"/>
 
-                // JVM data
-                runtimeMXBean = ManagementFactory.getRuntimeMXBean()
-                moquiJvmUptime = runtimeMXBean.getUptime() as String
+            <!-- JVM data -->
+            <set field="runtimeMXBean" from="java.lang.management.ManagementFactory.getRuntimeMXBean()"/>
+            <set field="moquiJvmUptime" from="runtimeMXBean.getUptime()" type="String"/>
 
-                // OS data
-                osMXBean = ManagementFactory.getOperatingSystemMXBean()
-                moquiOsLoad = osMXBean.getSystemLoadAverage() as String
-                moquiOsAvailableProcessors = osMXBean.getAvailableProcessors()
-                def runtimeFile = new File(ec.factory.runtimePath)
-                diskFreeRuntime = runtimeFile.getFreeSpace() as String
-                diskTotalRuntime = runtimeFile.getTotalSpace() as String
+            <!-- OS data -->
+            <set field="osMXBean" from="java.lang.management.ManagementFactory.getOperatingSystemMXBean()"/>
+            <set field="moquiOsLoad" from="osMXBean.getSystemLoadAverage()" type="String"/>
+            <set field="moquiOsAvailableProcessors" from="osMXBean.getAvailableProcessors()"/>
+            <set field="runtimeFile" from="new File(ec.factory.runtimePath)"/>
+            <set field="diskFreeRuntime" from="runtimeFile.getFreeSpace()" type="String"/>
+            <set field="diskTotalRuntime" from="runtimeFile.getTotalSpace()" type="String"/>
 
-                // Garbage Collector
-                gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans()
-                gcCount = 0
-                gcTime = 0
-                for (gcMXBean in gcMXBeans) {
-                    gcCount += gcMXBean.getCollectionCount()
-                    gcTime += gcMXBean.getCollectionTime()
-                }
-                gcCountString = gcCount as String
-                gcTimeString = gcTime as String
+            <!-- Garbage Collector data -->
+            <set field="gcMXBeans" from="java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()"/>
+            <set field="gcCount" from="0"/>
+            <set field="gcTime" from="0"/>
+            <iterate list="gcMXBeans" entry="gcMXBean">
+                <set field="gcCount" from="gcCount+gcMXBean.getCollectionCount()"/>
+                <set field="gcTime" from="gcTime+gcMXBean.getCollectionTime()"/>
+            </iterate>
+            <set field="gcCountString" from="gcCount" type="String"/>
+            <set field="gcTimeString" from="gcTime" type="String"/>
 
-                jitMXBean = ManagementFactory.getCompilationMXBean()
-                jitCompileTime = jitMXBean.getTotalCompilationTime() as String
+            <set field="jitMXBean" from="java.lang.management.ManagementFactory.getCompilationMXBean()"/>
+            <set field="jitCompileTime" from="jitMXBean.getTotalCompilationTime()" type="String"/>
+            <set field="classMXBean" from="java.lang.management.ManagementFactory.getClassLoadingMXBean()"/>
+            <set field="jvmClassesLoaded" from="classMXBean.getLoadedClassCount()" type="String"/>
+            <set field="jvmTotalClassesLoaded" from="classMXBean.getTotalLoadedClassCount()" type="String"/>
+            <set field="jvmClassesUnloaded" from="classMXBean.getUnloadedClassCount()" type="String"/>
+            <set field="threadMXBean" from="java.lang.management.ManagementFactory.getThreadMXBean()"/>
+            <set field="jvmThreadCount" from="threadMXBean.getThreadCount()" type="String"/>
+            <set field="jvmPeakThreadCount" from="threadMXBean.getPeakThreadCount()" type="String"/>
+            <set field="jvmTotalStartedThreadCount" from="threadMXBean.getTotalStartedThreadCount()"/>
 
-                classMXBean = ManagementFactory.getClassLoadingMXBean()
-                jvmClassesLoaded = classMXBean.getLoadedClassCount() as String
-                jvmTotalClassesLoaded = classMXBean.getTotalLoadedClassCount() as String
-                jvmClassesUnloaded = classMXBean.getUnloadedClassCount() as String
+            <set field="cpuArch" from="osMXBean.getArch().replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
+            <set field="osName" from="osMXBean.getName().replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
+            <set field="osVersion" from="osMXBean.getVersion().replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
+            <set field="jvmSpecVersion" from="runtimeMXBean.getSpecVersion().replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
+            <set field="jvmVendor" from="runtimeMXBean.getVmVendor().replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
+            <set field="jvmVersion" from="runtimeMXBean.getVmVersion().replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
+            <set field="moquiVersion" from="ec.factory.moquiVersion.replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
 
-                threadMXBean = ManagementFactory.getThreadMXBean()
-                jvmThreadCount = threadMXBean.getThreadCount() as String
-                jvmPeakThreadCount = threadMXBean.getPeakThreadCount() as String
-                jvmTotalStartedThreadCount = threadMXBean.getTotalStartedThreadCount() as String
-                metrics = []
-
-                cpuArch = osMXBean.getArch().replace('\\', '\\\\').replace('"', '\\"')
-                osName = osMXBean.getName().replace('\\', '\\\\').replace('"', '\\"')
-                osVersion = osMXBean.getVersion().replace('\\', '\\\\').replace('"', '\\"')
-                jvmSpecVersion = runtimeMXBean.getSpecVersion().replace('\\', '\\\\').replace('"', '\\"')
-                jvmVendor = runtimeMXBean.getVmVendor().replace('\\', '\\\\').replace('"', '\\"')
-                jvmVersion = runtimeMXBean.getVmVersion().replace('\\', '\\\\').replace('"', '\\"')
-                moquiVersion = ec.factory.moquiVersion.replace('\\', '\\\\').replace('"', '\\"')
-
-                componentInfoList = ec.factory.componentInfoList
-                runtimeVersionMap = ec.factory.getVersionMap()
-                frameworkLocation = new java.io.File(".").getCanonicalPath().replace('\\', '\\\\').replace('"', '\\"')
-                if (componentInfoList != null) {
-                    try {
-                        componentInfoList.add([name: 'framework', artifactType: 'framework', location: frameworkLocation, versionMap: runtimeVersionMap?.framework])
-                        componentInfoList.add([name: 'runtime', artifactType: 'runtime', location: ec.factory.runtimePath.replace('\\', '\\\\').replace('"', '\\"'), versionMap: runtimeVersionMap?.runtime])
-                    } catch (NullPointerException e) {}
-                }
-                artifactList = []
-                componentInfoList.each { artifact ->
-                    if (artifact.versionMap) {
-                        uniqueVersionMap = [:]
-                        artifact.versionMap.each { key, value -> uniqueVersionMap[key] == value }
+            <set field="componentInfoList" from="ec.factory.componentInfoList"/>
+            <set field="runtimeVersionMap" from="ec.factory.getVersionMap()"/>
+            <set field="frameworkLocation" from="new java.io.File('.').getCanonicalPath().replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
+            <if condition="componentInfoList != null"><script>
+                try {
+                    componentInfoList.add([name: 'framework', artifactType: 'framework', location: frameworkLocation, versionMap: runtimeVersionMap?.framework])
+                    componentInfoList.add([name: 'runtime', artifactType: 'runtime', location: ec.factory.runtimePath.replace('\\', '\\\\').replace('"', '\\"'), versionMap: runtimeVersionMap?.runtime])
+                } catch (NullPointerException e) {}
+            </script></if>
+            <set field="artifactList" from="[]"/>
+            <iterate list="componentInfoList" entry="artifact">
+                <if condition="artifact.versionMap">
+                    <set field="uniqueVersionMap" from="[:]"/>
+                    <iterate list="artifact.versionMap" key="key" entry="value">
+                        <set field="uniqueVersionMap[key]" from="value"/>
+                    </iterate>
+                    <script>
                         artifactVersionLabels = uniqueVersionMap.collect { key, value ->
                             return "git_" + key + "=\"" + (value ? (value.replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\"")
                         }.join(",")
-                        artifactName = artifact.name.replace('\\', '\\\\').replace('"', '\\"')
-                        artifactType = artifact.artifactType ?: 'component'
-                        artifactDependsOnNames = artifact.dependsOnNames ? artifact.dependsOnNames.join(",") : ""
+                    </script>
+                    <set field="artifactName" from="artifact.name.replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
+                    <set field="artifactType" from="artifact.artifactType ?: 'component'"/>
+                    <set field="artifactDependsOnNames" from="artifact.dependsOnNames ? artifact.dependsOnNames.join(',') : ''"/>
+                    <script>
                         artifactList.add("artifact_name=\"${artifactName}\",artifactType=\"${artifactType}\",artifact_location=\"${artifact.location ?: ''}\",depends_on_names=\"${artifactDependsOnNames}\"${artifactVersionLabels ? ',' + artifactVersionLabels : ''}")
-                    }
-                }
+                    </script>
+                </if>
+            </iterate>
 
-                // Worker Pool
-                workerPool = ec.factory.workerPool
-                workerPoolCurrent = workerPool.getPoolSize() as String
-                workerPoolActive = workerPool.getActiveCount() as String
-                workerPoolQueueSize = workerPool.queue.size() as String
-                workerPoolQueueRemainingCapacity = workerPool.queue.remainingCapacity() as String
+            <!-- Worker Pool -->
+            <set field="workerPool" from="ec.factory.workerPool"/>
+            <set field="workerPoolCurrent" from="workerPool.getPoolSize()" type="String"/>
+            <set field="workerPoolActive" from="workerPool.getActiveCount()" type="String"/>
+            <set field="workerPoolQueueSize" from="workerPool.queue.size()" type="String"/>
+            <set field="workerPoolQueueRemainingCapacity" from="workerPool.queue.remainingCapacity()" type="String"/>
 
-                dataSources = []
-                ec.entity.getDataSourcesInfo().each { dataSource ->
-                    dataSourceLabels = new StringBuffer()
+            <set field="dataSources" from="[]"/>
+            <iterate list="ec.entity.getDataSourcesInfo()" entry="dataSource">
+                <set field="dataSourceLabels" from="new StringBuffer()"/>
+                <set field="dataSourceDetail" from="dataSource.detail"/>
+                <script>
                     dataSourceLabels.append("group=\"${dataSource.group.replace('\\', '\\\\').replace('"', '\\"')}\"")
                     if (dataSource.uniqueName)
                         dataSourceLabels.append(",unique_name=\"${dataSource.uniqueName.replace('\\', '\\\\').replace('"', '\\"')}\"")
                     if (dataSource.database)
                         dataSourceLabels.append(",database=\"${dataSource.database.replace('\\', '\\\\').replace('"', '\\"')}\"")
-                    dataSourceDetail = dataSource.detail
                     if (dataSourceDetail) {
                         detailLabels = dataSourceDetail.collect { key, value ->
                             return "detail_${key}=\"" + value.replace('\\', '\\\\').replace('"', '\\"') + "\""
@@ -132,11 +134,14 @@ along with this software (see the LICENSE.md file). If not, see
                         dataSourceLabels.append("," + detailLabels)
                     }
                     dataSources.add(dataSourceLabels)
-                }
+                </script>
+            </iterate>
 
-                esServerInfoList = []
-                if (ec.elastic) {
-                    ec.elastic.getClientList().each { esClient ->
+            <!-- Elastic / OpenSearch -->
+            <set field="esServerInfoList" from="[]"/>
+            <if condition="ec.elastic">
+                <iterate list="ec.elastic.getClientList()" entry="esClient">
+                    <script>
                         try {
                             esServerInfo = esClient.getServerInfo()
                             if (esServerInfo) {
@@ -146,38 +151,42 @@ along with this software (see the LICENSE.md file). If not, see
                         } catch (Throwable t) {
                             ec.logger.error("Error getting info for Elastic Client", t)
                             esServerInfo = [clientClusterName: esClient.getClusterName(), clusterLocation: esClient.getClusterLocation(), name: t.toString(), cluster_name: 'ERROR']
+                            esServerInfoList.add(esServerInfo.collect { key, value ->
+                                if (value instanceof Map) {
+                                    return value.collect { innerKey, innerValue ->
+                                        return "${key}_${innerKey}=\"" + (innerValue ? (innerValue.replace('\\', '\\\\').replace('"', '\\"')) : "") + "\""
+                                    }.join(",")
+                                } else
+                                    return "${key}=\"" + (value ? (value.replace('\\', '\\\\').replace('"', '\\"')) : "") + "\""
+                            }.join(","))
                         }
-                        esServerInfoList.add(esServerInfo.collect { key, value ->
-                            if (value instanceof Map) {
-                                return value.collect { innerKey, innerValue ->
-                                    return "${key}_${innerKey}=\"" + (innerValue ? (innerValue.replace('\\', '\\\\').replace('"', '\\"')) : "") + "\""
-                                }.join(",")
-                            } else
-                                return "${key}=\"" + (value ? (value.replace('\\', '\\\\').replace('"', '\\"')) : "") + "\""
-                        }.join(","))
-                    }
-                }
+                    </script>
+                </iterate>
+            </if>
 
-                localAddress = ec.factory.getLocalhostAddress().getHostAddress()
-                hzToolFactory = ec.factory.getToolFactory('Hazelcast')
-                hazelcastInstance = hzToolFactory?.getInstance()
-                if (hazelcastInstance != null) {
-                    cluster = hazelcastInstance.getCluster()
-                    hazelcastLabels = "version=\"${cluster.getClusterVersion()}\",status=\"${cluster.getClusterState()}\""
-                    hzDciToolFactory = ec.factory.getToolFactory('HazelcastDciTopic')
+            <set field="localAddress" from="ec.factory.getLocalhostAddress().getHostAddress()"/>
+
+            <!-- Hazelcast -->
+            <set field="hzToolFactory" from="ec.factory.getToolFactory('Hazelcast')"/>
+            <set field="hazelcastInstance" from="hzToolFactory?.getInstance()"/>
+            <if condition="hazelcastInstance">
+                <set field="cluster" from="hazelcastInstance.getCluster()"/>
+                <set field="hazelcastLabels" value="version=\&quot;${cluster.getClusterVersion()}\&quot;,status=\&quot;${cluster.getClusterState()}\&quot;"/>
+                <set field="hzDciToolFactory" from="ec.factory.getToolFactory('HazelcastDciTopic')"/>
+                <script>
                     hazelcastMemberLabels = cluster.getMembers().collect { member ->
                         return "address=\"${member.getAddress()}\",version=\"${member.getVersion()}\",is_local=\"${member.localMember() as String}\""
                     }
-                }
-                hzDciToolFactory = ec.factory.getToolFactory('HazelcastDciTopic')
-                if (hzDciToolFactory) {
-                    hazelcastDciPublishedCount = hzDciToolFactory.getDciPublished() as String
-                    hazelcastDciLastPublishTimestamp = (hzDciToolFactory.getLastPublishTime() ?: "NaN") as String
-                    hazelcastDciReceivedCount = hzDciToolFactory.getDciReceived() as String
-                    hazelcastDciLastReceiveTimestamp = (hzDciToolFactory.getLastReceiveTime() ?: "NaN") as String
-                }
-            }
-        ]]></script>
+                </script>
+            </if>
+            <set field="hzDciToolFactory" from="ec.factory.getToolFactory('HazelcastDciTopic')"/>
+            <if condition="hzDciToolFactory">
+                <set field="hazelcastDciPublishedCount" from="hzDciToolFactory.getDciPublished() as String"/>
+                <set field="hazelcastDciLastPublishTimestamp" from="(hzDciToolFactory.getLastPublishTime() ?: 'NaN')" type="String"/>
+                <set field="hazelcastDciReceivedCount" from="hzDciToolFactory.getDciReceived()" type="String"/>
+                <set field="hazelcastDciLastReceiveTimestamp" from="(hzDciToolFactory.getLastReceiveTime() ?: 'NaN')" type="String"/>
+
+            </if>
 
         <!-- Artifact Hits last 1 minute -->
         <set field="localPort" from="ec.factory.getStatusMap(true)?.Web?.LocalPort"/>
@@ -345,6 +354,22 @@ moqui_hazelcast_member {${hazelcastMemberLabel}} 1 ${queryTimestamp}
                     <widgets>
                         <render-mode><text type="text" no-boundary-comment="true">
 moqui_hit_webroot_runningtime_milliseconds {${hitLabels}} ${hitRunningTime} ${queryTimestamp}
+                        </text></render-mode>
+                    </widgets>
+                </section-iterate>
+                <render-mode><text type="text" no-boundary-comment="true">
+#HELP moqui_webroot_runningtime_milliseconds Histogram with durations of webroot running times in buckets
+#TYPE moqui_webroot_runningtime_milliseconds histogram
+moqui_webroot_runningtime_milliseconds_sum  ${webrootHitSum} ${queryTimestamp}
+moqui_webroot_runningtime_milliseconds_count ${webrootHitCount} ${queryTimestamp}
+                </text></render-mode>
+                <section-iterate name="WebrootRunningTimeHistogram" list="webrootHitBuckets" key="le" entry="bucketCount">
+                    <actions>
+                        <set field="bucketLabels" value="le=\&quot;${(le == 'Inf' ? '+Inf' : le)}\&quot;"/>
+                    </actions>
+                    <widgets>
+                        <render-mode><text type="text" no-boundary-comment="true">
+moqui_webroot_runningtime_milliseconds_bucket {${bucketLabels}} ${bucketCount} ${queryTimestamp}
                         </text></render-mode>
                     </widgets>
                 </section-iterate>
