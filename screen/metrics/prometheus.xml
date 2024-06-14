@@ -188,19 +188,39 @@ along with this software (see the LICENSE.md file). If not, see
 
             </if>
 
-        <!-- Artifact Hits last 1 minute -->
-        <set field="localPort" from="ec.factory.getStatusMap(true)?.Web?.LocalPort"/>
-        <entity-find entity-name="moqui.server.ArtifactHit" list="hitList" cache="true">
-            <econdition field-name="startDateTime" operator="greater-equals" from="ec.user.nowTimestamp.time-(1*60*1000)"/>
-            <econdition field-name="artifactType" value="AT_XML_SCREEN"/>
-            <econdition field-name="artifactName" value="component://webroot/screen/webroot.xml"/>
-            <econdition field-name="serverIpAddress" from="localAddress"/>
-            <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}/metrics/prometheus"/>
-            <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}:${localPort}/metrics/prometheus"/>
-            <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}/status"/>
-            <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}:${localPort}/status"/>
-        </entity-find>
-        <set field="queryTimestamp" from="ec.user.nowTimestamp.time as String"/>
+            <!-- Artifact Hits last 2 minutes -->
+            <set field="localPort" from="ec.factory.getStatusMap(true)?.Web?.LocalPort"/>
+            <entity-find entity-name="moqui.server.ArtifactHit" list="hitList" cache="true">
+                <econdition field-name="startDateTime" operator="greater-equals" from="ec.user.nowTimestamp.time-(2*60*1000)"/>
+                <econdition field-name="artifactType" value="AT_XML_SCREEN"/>
+                <econdition field-name="artifactName" value="component://webroot/screen/webroot.xml"/>
+                <econdition field-name="serverIpAddress" from="localAddress"/>
+                <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}/metrics/prometheus"/>
+                <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}:${localPort}/metrics/prometheus"/>
+                <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}/status"/>
+                <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}:${localPort}/status"/>
+            </entity-find>
+            <set field="queryTimestamp" from="ec.user.nowTimestamp.time as String"/>
+
+            <set field="bucketLeValues" from="[5, 10, 25, 50, 100, 250, 500, 1000, 3000, 5000, 10000]"/>
+            <set field="webrootHitBuckets" from="[:]"/>
+            <set field="webrootHitSum" from="0"/>
+            <set field="webrootHitCount" from="0"/>
+            <iterate list="hitList" entry="hit">
+                <iterate list="bucketLeValues" entry="le">
+                    <if condition="hit.runningTimeMillis &lt;= le">
+                        <set field="webrootHitBuckets[le]" from="(webrootHitBuckets[le] ?: 0) + 1"/>
+                    </if>
+                </iterate>
+                <set field="webrootHitSum" from="webrootHitSum + hit.runningTimeMillis"/>
+                <set field="webrootHitCount" from="webrootHitCount + 1"/>
+            </iterate>
+            <set field="webrootHitBuckets.'+Inf'" from="webrootHitCount"/>
+            <set field="webrootHitSumString" from="webrootHitSum" type="String"/>
+            <set field="webrootHitCountString" from="webrootHitCount" type="String"/>
+
+        </if>
+
     </actions>
 
     <widgets>
@@ -360,20 +380,20 @@ moqui_hit_webroot_runningtime_milliseconds {${hitLabels}} ${hitRunningTime} ${qu
                 <render-mode><text type="text" no-boundary-comment="true">
 #HELP moqui_webroot_runningtime_milliseconds Histogram with durations of webroot running times in buckets
 #TYPE moqui_webroot_runningtime_milliseconds histogram
-moqui_webroot_runningtime_milliseconds_sum  ${webrootHitSum} ${queryTimestamp}
-moqui_webroot_runningtime_milliseconds_count ${webrootHitCount} ${queryTimestamp}
+moqui_webroot_runningtime_milliseconds_sum  ${webrootHitSumString} ${queryTimestamp}
+moqui_webroot_runningtime_milliseconds_count ${webrootHitCountString} ${queryTimestamp}
                 </text></render-mode>
                 <section-iterate name="WebrootRunningTimeHistogram" list="webrootHitBuckets" key="le" entry="bucketCount">
                     <actions>
-                        <set field="bucketLabels" value="le=\&quot;${(le == 'Inf' ? '+Inf' : le)}\&quot;"/>
+                        <set field="bucketLabels" value="le=\&quot;${le}\&quot;"/>
+                        <set field="bucketCountString" from="bucketCount" type="String"/>
                     </actions>
                     <widgets>
                         <render-mode><text type="text" no-boundary-comment="true">
-moqui_webroot_runningtime_milliseconds_bucket {${bucketLabels}} ${bucketCount} ${queryTimestamp}
+moqui_webroot_runningtime_milliseconds_bucket {${bucketLabels}} ${bucketCountString} ${queryTimestamp}
                         </text></render-mode>
                     </widgets>
                 </section-iterate>
-
             </widgets>
             <fail-widgets>
                 <render-mode><text type="text" no-boundary-comment="true">
