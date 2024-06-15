@@ -369,11 +369,12 @@ moqui_hazelcast_member {${hazelcastMemberLabel}} 1 ${queryTimestamp}
                             }
                             hitLabels = hitLabelList.join(",")
                             hitRunningTime = hit.runningTimeMillis as String
+                            startDateTimeMillis = hit.startDateTime.time as String
                         ]]></script>
                     </actions>
                     <widgets>
                         <render-mode><text type="text" no-boundary-comment="true">
-moqui_hit_webroot_runningtime_milliseconds {${hitLabels}} ${hitRunningTime} ${queryTimestamp}
+moqui_hit_webroot_runningtime_milliseconds {${hitLabels}} ${hitRunningTime} ${startDateTimeMillis}
                         </text></render-mode>
                     </widgets>
                 </section-iterate>
