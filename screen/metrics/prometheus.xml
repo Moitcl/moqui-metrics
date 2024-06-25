@@ -93,13 +93,15 @@ along with this software (see the LICENSE.md file). If not, see
             <iterate list="componentInfoList" entry="artifact">
                 <if condition="artifact.versionMap">
                     <set field="uniqueVersionMap" from="[:]"/>
-                    <iterate list="artifact.versionMap" key="key" entry="value">
-                        <set field="uniqueVersionMap[key]" from="value"/>
-                    </iterate>
                     <script>
-                        artifactVersionLabels = uniqueVersionMap.collect { key, value ->
-                            return "git_" + key + "=\"" + (value ? (value.replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\"")
-                        }.join(",")
+                        try {
+                            artifact.versionMap.each { key, value ->
+                                uniqueVersionMap[key] = value
+                            }
+                            artifactVersionLabels = uniqueVersionMap.collect { key, value ->
+                                return "git_" + key + "=\"" + (value ? (value.replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\"")
+                            }.join(",")
+                        } catch (NullPointerException e) {}
                     </script>
                     <set field="artifactName" from="artifact.name.replace('\\', '\\\\').replace('&quot;', '\\&quot;')"/>
                     <set field="artifactType" from="artifact.artifactType ?: 'component'"/>
