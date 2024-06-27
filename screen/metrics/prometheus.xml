@@ -115,9 +115,23 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- Worker Pool -->
             <set field="workerPool" from="ec.factory.workerPool"/>
             <set field="workerPoolCurrent" from="workerPool.getPoolSize()" type="String"/>
+            <set field="workerPoolMaxSize" from="workerPool.getMaximumPoolSize()" type="String"/>
             <set field="workerPoolActive" from="workerPool.getActiveCount()" type="String"/>
             <set field="workerPoolQueueSize" from="workerPool.queue.size()" type="String"/>
             <set field="workerPoolQueueRemainingCapacity" from="workerPool.queue.remainingCapacity()" type="String"/>
+
+            <!-- Scheduled Executor -->
+            <set field="scheduledExecutor" from="ec.factory.scheduledExecutor"/>
+            <set field="scheduledPoolCurrent" from="scheduledExecutor.getPoolSize()" type="String"/>
+            <set field="scheduledPoolMaxSize" from="scheduledExecutor.getMaximumPoolSize()" type="String"/>
+            <set field="scheduledPoolActive" from="scheduledExecutor.getActiveCount()" type="String"/>
+            <set field="scheduledPoolQueueSize" from="scheduledExecutor.queue.size()" type="String"/>
+            <set field="scheduledPoolQueueRemainingCapacity" from="scheduledExecutor.queue.remainingCapacity()" type="String"/>
+            <set field="jobRunner" from="ec.service.getJobRunner()"/>
+            <set field="jobRunnerExecuteTotal" from="jobRunner.getExecuteCount()" type="String"/>
+            <set field="jobRunnerJobRunTotal" from="jobRunner.getTotalJobsRun()" type="String"/>
+            <set field="jobRunnerLastJobsActive" from="jobRunner.getLastJobsActive()" type="String"/>
+            <set field="jobRunnerLastJobsPaused" from="jobRunner.getLastJobsPaused()" type="String"/>
 
             <set field="dataSources" from="[]"/>
             <iterate list="ec.entity.getDataSourcesInfo()" entry="dataSource">
@@ -297,10 +311,42 @@ moqui_workerpool_current ${workerPoolCurrent} ${queryTimestamp}
 moqui_workerpool_active ${workerPoolActive} ${queryTimestamp}
 #HELP moqui_workerpool_queue_size Number of tasks queued for worker pool
 #TYPE moqui_workerpool_queue_size gauge
+#HELP moqui_workerpool_max_size Maximum number of threads in the worker pool
+#TYPE moqui_workerpool_max_size gauge
+moqui_workerpool_max_size ${workerPoolMaxSize} ${queryTimestamp}
 moqui_workerpool_queue_size ${workerPoolQueueSize} ${queryTimestamp}
 #HELP moqui_workerpool_queue_remaining_capacity Number of slots available to queue tasks for worker pool
 #TYPE moqui_workerpool_queue_remaining_capacity gauge
 moqui_workerpool_remaining_capacity ${workerPoolQueueRemainingCapacity} ${queryTimestamp}
+
+#HELP moqui_scheduledpool_current Current number of threads in the scheduled pool
+#TYPE moqui_scheduledpool_current gauge
+moqui_scheduledpool_current ${scheduledPoolCurrent} ${queryTimestamp}
+#HELP moqui_scheduledpool_max_size Maximum number of threads in the scheduled pool
+#TYPE moqui_scheduledpool_max_size gauge
+moqui_scheduledpool_max_size ${scheduledPoolMaxSize} ${queryTimestamp}
+#HELP moqui_scheduledpool_active Approximate number of threads that are actively executing tasks in the scheduled pool
+#TYPE moqui_scheduledpool_active gauge
+moqui_scheduledpool_active ${scheduledPoolActive} ${queryTimestamp}
+#HELP moqui_scheduledpool_queue_size Number of tasks queued for scheduled pool
+#TYPE moqui_scheduledpool_queue_size gauge
+moqui_scheduledpool_queue_size ${scheduledPoolQueueSize} ${queryTimestamp}
+#HELP moqui_scheduledpool_queue_remaining_capacity Number of slots available to queue tasks for scheduled pool
+#TYPE moqui_scheduledpool_queue_remaining_capacity gauge
+moqui_scheduledpool_remaining_capacity ${scheduledPoolQueueRemainingCapacity} ${queryTimestamp}
+
+#HELP moqui_jobrunner_execute_total Total number of jobRunner executions (evaluate which jobs to run)
+#TYPE moqui_jobrunner_execute_total counter
+moqui_jobrunner_execute_total ${jobRunnerExecuteTotal} ${queryTimestamp}
+#HELP moqui_jobrunner_run_total Total number of jobs run by JobRunner
+#TYPE moqui_jobrunner_run_total counter
+moqui_jobrunner_run_total ${jobRunnerJobRunTotal} ${queryTimestamp}
+#HELP moqui_jobrunner_last_active Number of jobs active at last execution
+#TYPE moqui_jobrunner_last_active gauge
+moqui_jobrunner_last_active ${jobRunnerLastJobsActive} ${queryTimestamp}
+#HELP moqui_jobrunner_last_paused Number of jobs paused at last execution
+#TYPE moqui_jobrunner_last_paused gauge
+moqui_jobrunner_run_paused ${jobRunnerLastJobsPaused} ${queryTimestamp}
 
 #HELP moqui_info General information about the moqui instance
 moqui_info {moqui_version="${moquiVersion}",cpu_arch="${cpuArch}",os_name="${osName}",os_version="${osVersion}",jvm_spec_version="${jvmSpecVersion}",jvm_vendor="${jvmVendor}",jvm_version="${jvmVersion}"} 1 ${queryTimestamp}
