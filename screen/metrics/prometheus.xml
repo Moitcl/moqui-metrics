@@ -13,13 +13,13 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        standalone="true" render-modes="text" require-authentication="anonymous-all">
+        standalone="true" render-modes="text" require-authentication="anonymous-all" track-artifact-hit="false">
     <web-settings require-encryption="false"/>
 
     <pre-actions><script>sri.renderMode("text")</script></pre-actions>
 
     <actions>
-        <service-call name="metrics.MetricsServices.check#Client" out-map="context" ignore-error="true" transaction="force-new" transaction-timeout="1"/>
+        <service-call name="moqui.metrics.MetricsServices.check#Client" out-map="context" ignore-error="true" transaction="force-new" transaction-timeout="1"/>
         <if condition="!finished">
             <log message="Could not check Client"/>
         </if>
@@ -40,7 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- JVM data -->
             <set field="runtimeMXBean" from="java.lang.management.ManagementFactory.getRuntimeMXBean()"/>
-            <set field="moquiJvmUptime" from="runtimeMXBean.getUptime()" type="String"/>
+            <set field="moquiJvmUptime" from="(runtimeMXBean.getUptime() as BigDecimal) / 1000" type="String"/>
 
             <!-- OS data -->
             <set field="osMXBean" from="java.lang.management.ManagementFactory.getOperatingSystemMXBean()"/>
@@ -59,10 +59,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="gcTime" from="gcTime+gcMXBean.getCollectionTime()"/>
             </iterate>
             <set field="gcCountString" from="gcCount" type="String"/>
-            <set field="gcTimeString" from="gcTime" type="String"/>
+            <set field="gcTimeString" from="(gcTime as BigDecimal) / 1000" type="String"/>
 
             <set field="jitMXBean" from="java.lang.management.ManagementFactory.getCompilationMXBean()"/>
-            <set field="jitCompileTime" from="jitMXBean.getTotalCompilationTime()" type="String"/>
+            <set field="jitCompileTime" from="(jitMXBean.getTotalCompilationTime() as BigDecimal) / 1000" type="String"/>
             <set field="classMXBean" from="java.lang.management.ManagementFactory.getClassLoadingMXBean()"/>
             <set field="jvmClassesLoaded" from="classMXBean.getLoadedClassCount()" type="String"/>
             <set field="jvmTotalClassesLoaded" from="classMXBean.getTotalLoadedClassCount()" type="String"/>
@@ -204,37 +204,11 @@ along with this software (see the LICENSE.md file). If not, see
 
             </if>
 
-            <!-- Artifact Hits last 2 minutes -->
-            <set field="localPort" from="ec.factory.getStatusMap(true)?.Web?.LocalPort"/>
-            <entity-find entity-name="moqui.server.ArtifactHit" list="hitList" cache="true">
-                <econdition field-name="startDateTime" operator="greater-equals" from="ec.user.nowTimestamp.time-(2*60*1000)"/>
-                <econdition field-name="artifactType" value="AT_XML_SCREEN"/>
-                <econdition field-name="artifactName" value="component://webroot/screen/webroot.xml"/>
-                <econdition field-name="serverIpAddress" from="localAddress"/>
-                <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}/metrics/prometheus"/>
-                <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}:${localPort}/metrics/prometheus"/>
-                <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}/status"/>
-                <econdition field-name="requestUrl" operator="not-equals" value="http://${localAddress}:${localPort}/status"/>
-            </entity-find>
             <set field="queryTimestamp" from="ec.user.nowTimestamp.time as String"/>
 
-            <set field="bucketLeValues" from="[5, 10, 25, 50, 100, 250, 500, 1000, 3000, 5000, 10000]"/>
-            <set field="webrootHitBuckets" from="[:]"/>
-            <set field="webrootHitSum" from="0"/>
-            <set field="webrootHitCount" from="0"/>
-            <iterate list="hitList" entry="hit">
-                <iterate list="bucketLeValues" entry="le">
-                    <if condition="hit.runningTimeMillis &lt;= le">
-                        <set field="webrootHitBuckets[le]" from="(webrootHitBuckets[le] ?: 0) + 1"/>
-                    </if>
-                </iterate>
-                <set field="webrootHitSum" from="webrootHitSum + hit.runningTimeMillis"/>
-                <set field="webrootHitCount" from="webrootHitCount + 1"/>
-            </iterate>
-            <set field="webrootHitBuckets.'+Inf'" from="webrootHitCount"/>
-            <set field="webrootHitSumString" from="webrootHitSum" type="String"/>
-            <set field="webrootHitCountString" from="webrootHitCount" type="String"/>
-
+            <if condition="ec.factory.getToolFactory('Metrics')">
+                <set field="hitStatString" from="ec.getTool('Metrics', null).nextValues()"/>
+            </if>
         </if>
 
     </actions>
@@ -261,9 +235,9 @@ moqui_memory_nonheap_max_bytes ${moquiMemoryNonHeapMax} ${queryTimestamp}
 #HELP moqui_memory_nonheap_committed_bytes Amount of non-heap memory in bytes that is committed for the Java virtual machine to use. This amount of memory is guaranteed for the Java virtual machine to use.
 #TYPE moqui_memory_nonheap_committed_bytes gauge
 moqui_memory_nonheap_committed_bytes ${moquiMemoryNonHeapCommitted} ${queryTimestamp}
-#HELP moqui_jvm_uptime_milliseconds Uptime of the Java virtual machine in milliseconds
-#TYPE moqui_jvm_uptime_milliseconds counter
-moqui_jvm_uptime_milliseconds {} ${moquiJvmUptime} ${queryTimestamp}
+#HELP moqui_jvm_uptime_seconds Uptime of the Java virtual machine in seconds
+#TYPE moqui_jvm_uptime_seconds counter
+moqui_jvm_uptime_seconds {} ${moquiJvmUptime} ${queryTimestamp}
 #HELP moqui_os_load System load average for the last minute
 #TYPE moqui_os_load gauge
 moqui_os_load ${moquiOsLoad} ${queryTimestamp}
@@ -279,12 +253,12 @@ moqui_os_processors_available_cores ${moquiOsAvailableProcessors} ${queryTimesta
 #HELP moqui_memory_gc_count Total number of collections that have occurred
 #TYPE moqui_memory_gc_count counter
 moqui_memory_gc_count ${gcCountString} ${queryTimestamp}
-#HELP moqui_memory_gc_time_milliseconds Approximate accumulated collection elapsed time in milliseconds
-#TYPE moqui_memory_gc_time_milliseconds counter
-moqui_memory_gc_time_milliseconds ${gcTimeString} ${queryTimestamp}
-#HELP moqui_memory_jit_compile_time_milliseconds Approximate accumulated elapsed time (in milliseconds) spent in compilation
-#TYPE moqui_memory_jit_compile_time_milliseconds counter
-moqui_memory_jit_compile_time_milliseconds ${jitCompileTime} ${queryTimestamp}
+#HELP moqui_memory_gc_time_seconds Approximate accumulated collection elapsed time in seconds
+#TYPE moqui_memory_gc_time_seconds counter
+moqui_memory_gc_time_seconds ${gcTimeString} ${queryTimestamp}
+#HELP moqui_memory_jit_compile_time_seconds Approximate accumulated elapsed time (in seconds) spent in compilation
+#TYPE moqui_memory_jit_compile_time_seconds counter
+moqui_memory_jit_compile_time_seconds ${jitCompileTime} ${queryTimestamp}
 #HELP moqui_jvm_classes_loaded Number of classes that are currently loaded in the Java virtual machine
 #TYPE moqui_jvm_classes_loaded gauge
 moqui_jvm_classes_loaded ${jvmClassesLoaded} ${queryTimestamp}
@@ -346,7 +320,9 @@ moqui_jobrunner_run_total ${jobRunnerJobRunTotal} ${queryTimestamp}
 moqui_jobrunner_last_active ${jobRunnerLastJobsActive} ${queryTimestamp}
 #HELP moqui_jobrunner_last_paused Number of jobs paused at last execution
 #TYPE moqui_jobrunner_last_paused gauge
-moqui_jobrunner_run_paused ${jobRunnerLastJobsPaused} ${queryTimestamp}
+moqui_jobrunner_last_paused ${jobRunnerLastJobsPaused} ${queryTimestamp}
+
+${hitStatString}
 
 #HELP moqui_info General information about the moqui instance
 moqui_info {moqui_version="${moquiVersion}",cpu_arch="${cpuArch}",os_name="${osName}",os_version="${osVersion}",jvm_spec_version="${jvmSpecVersion}",jvm_vendor="${jvmVendor}",jvm_version="${jvmVersion}"} 1 ${queryTimestamp}
@@ -378,6 +354,7 @@ moqui_elasticsearch_server_info {${elasticServer}} 1 ${queryTimestamp}
                     </text></render-mode></widgets>
                 </section-iterate>
 
+                <section name="HazelcastInfo" condition="hazelcastInstance"><widgets>
                 <render-mode><text type="text" no-boundary-comment="true">
 #HELP moqui_hazelcast_info Hazelcast cluster info
 moqui_moqui_hazelcast_info {${hazelcastLabels}} 1 ${queryTimestamp}
@@ -395,53 +372,11 @@ moqui_hazelcast_dci_received_count ${hazelcastDciReceivedCount} ${queryTimestamp
 moqui_hazelcast_dci_received_last_timestamp ${hazelcastDciLastReceiveTimestamp} ${queryTimestamp}
 #HELP moqui_hazelcast_member Hazelcast cluster member
                 </text></render-mode>
+                </widgets></section>
                 <section-iterate name="HazelcastMembers" list="hazelcastMemberLabels" entry="hazelcastMemberLabel">
                     <widgets><render-mode><text type="text" no-boundary-comment="true">
 moqui_hazelcast_member {${hazelcastMemberLabel}} 1 ${queryTimestamp}
                     </text></render-mode></widgets>
-                </section-iterate>
-
-                <section name="HitHeader"><widgets>
-                    <render-mode><text type="text" no-boundary-comment="true">
-#HELP moqui_hit_webroot_runningtime_milliseconds Hits to webroot screen
-#TYPE moqui_hit_webroot_runningtime_milliseconds gauge
-                    </text></render-mode>
-                </widgets></section>
-                <section-iterate name="HitList" list="hitList" entry="hit">
-                    <actions>
-                        <script><![CDATA[
-                            hitLabelList = []
-                            hitLabels = hit.each { key, value ->
-                                if (key != "runningTimeMillis")
-                                    hitLabelList.add(key + "=\"" + (value ? (value.toString().replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\""))
-                            }
-                            hitLabels = hitLabelList.join(",")
-                            hitRunningTime = hit.runningTimeMillis as String
-                            startDateTimeMillis = hit.startDateTime.time as String
-                        ]]></script>
-                    </actions>
-                    <widgets>
-                        <render-mode><text type="text" no-boundary-comment="true">
-moqui_hit_webroot_runningtime_milliseconds {${hitLabels}} ${hitRunningTime} ${startDateTimeMillis}
-                        </text></render-mode>
-                    </widgets>
-                </section-iterate>
-                <render-mode><text type="text" no-boundary-comment="true">
-#HELP moqui_webroot_runningtime_milliseconds Histogram with durations of webroot running times in buckets
-#TYPE moqui_webroot_runningtime_milliseconds histogram
-moqui_webroot_runningtime_milliseconds_sum  ${webrootHitSumString} ${queryTimestamp}
-moqui_webroot_runningtime_milliseconds_count ${webrootHitCountString} ${queryTimestamp}
-                </text></render-mode>
-                <section-iterate name="WebrootRunningTimeHistogram" list="webrootHitBuckets" key="le" entry="bucketCount">
-                    <actions>
-                        <set field="bucketLabels" value="le=\&quot;${le}\&quot;"/>
-                        <set field="bucketCountString" from="bucketCount" type="String"/>
-                    </actions>
-                    <widgets>
-                        <render-mode><text type="text" no-boundary-comment="true">
-moqui_webroot_runningtime_milliseconds_bucket {${bucketLabels}} ${bucketCountString} ${queryTimestamp}
-                        </text></render-mode>
-                    </widgets>
                 </section-iterate>
             </widgets>
             <fail-widgets>

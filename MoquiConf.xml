@@ -7,4 +7,8 @@
 
     <default-property name="metrics_prometheus_servers" value=""/>
 
+    <tools>
+        <tool-factory class="org.moqui.metrics.MetricsFactory" disabled="false" init-priority="60"/>
+    </tools>
+
 </moqui-conf>

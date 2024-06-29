@@ -1,0 +1,44 @@
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <entity package="moqui.metrics" entity-name="MetricsHistogram">
+        <field name="counterName" type="text-medium" is-pk="true">
+            <description>The name to use in the exported metric, which will be in the form of moqui_hit_${prometheusCounterName}_runningtime_seconds
+                         moqui_hit_${prometheusCounterName}_histogram_seconds for Prometheus. If more than one record has same counterName, the results will be
+                         combined and exposed only once, using that counterName
+            </description>
+        </field>
+        <field name="description" type="text-medium">
+            <description>Brief description to be used in metrics help to understand what artifacts the counter is expected to expose</description>
+        </field>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
+        <relationship type="many" short-alias="bucket" related="moqui.metrics.MetricsHistogramBucket">
+            <key-map field-name="counterName"/>
+        </relationship>
+        <relationship type="many" short-alias="artifact" related="moqui.metrics.MetricsHistogramArtifact">
+            <key-map field-name="counterName"/>
+        </relationship>
+    </entity>
+
+    <entity package="moqui.metrics" entity-name="MetricsHistogramBucket">
+        <description>Bucket for a counter, defined by the upper limit (le)</description>
+        <field name="counterName" type="text-medium" is-pk="true"/>
+        <field name="upperBound" type="number-decimal" is-pk="true"><description>Upper limit for the bucket</description></field>
+        <field name="additionalLabelsJson" type="text-medium">
+            <description>Map additional labels to add to the bucket when exposing the values, in JSON format</description>
+        </field>
+        <relationship type="one" related="moqui.metrics.MetricsHistogram">
+            <key-map field-name="counterName"/>
+        </relationship>
+    </entity>
+
+    <entity package="moqui.metrics" entity-name="MetricsHistogramArtifact">
+        <field name="counterName" type="text-medium" is-pk="true"/>
+        <field name="artifactType" type="text-medium" is-pk="true"/>
+        <field name="artifactName" type="text-medium" is-pk="true"/>
+        <relationship type="one" related="moqui.metrics.MetricsHistogram">
+            <key-map field-name="counterName"/>
+        </relationship>
+    </entity>
+
+</entities>
