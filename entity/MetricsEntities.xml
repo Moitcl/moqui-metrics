@@ -1,10 +1,10 @@
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
 
-    <entity package="moqui.metrics" entity-name="MetricsHistogram">
-        <field name="counterName" type="text-medium" is-pk="true">
+    <entity package="moqui.metrics" entity-name="MetricsHitGroup">
+        <field name="metricName" type="text-medium" is-pk="true">
             <description>The name to use in the exported metric, which will be in the form of moqui_hit_${prometheusCounterName}_runningtime_seconds
-                         moqui_hit_${prometheusCounterName}_histogram_seconds for Prometheus. If more than one record has same counterName, the results will be
-                         combined and exposed only once, using that counterName
+                         moqui_hit_${prometheusCounterName}_histogram_seconds for Prometheus. If more than one record has same metricName, the results will be
+                         combined and exposed only once, using that metricName
             </description>
         </field>
         <field name="description" type="text-medium">
@@ -12,32 +12,32 @@
         </field>
         <field name="fromDate" type="date-time"/>
         <field name="thruDate" type="date-time"/>
-        <relationship type="many" short-alias="bucket" related="moqui.metrics.MetricsHistogramBucket">
-            <key-map field-name="counterName"/>
+        <relationship type="many" short-alias="bucket" related="moqui.metrics.MetricsHitGroupBucket">
+            <key-map field-name="metricName"/>
         </relationship>
-        <relationship type="many" short-alias="artifact" related="moqui.metrics.MetricsHistogramArtifact">
-            <key-map field-name="counterName"/>
+        <relationship type="many" short-alias="artifact" related="moqui.metrics.MetricsHitGroupArtifact">
+            <key-map field-name="metricName"/>
         </relationship>
     </entity>
 
-    <entity package="moqui.metrics" entity-name="MetricsHistogramBucket">
+    <entity package="moqui.metrics" entity-name="MetricsHitGroupBucket">
         <description>Bucket for a counter, defined by the upper limit (le)</description>
-        <field name="counterName" type="text-medium" is-pk="true"/>
+        <field name="metricName" type="text-medium" is-pk="true"/>
         <field name="upperBound" type="number-decimal" is-pk="true"><description>Upper limit for the bucket</description></field>
         <field name="additionalLabelsJson" type="text-medium">
             <description>Map additional labels to add to the bucket when exposing the values, in JSON format</description>
         </field>
-        <relationship type="one" related="moqui.metrics.MetricsHistogram">
-            <key-map field-name="counterName"/>
+        <relationship type="one" related="moqui.metrics.MetricsHitGroup">
+            <key-map field-name="metricName"/>
         </relationship>
     </entity>
 
-    <entity package="moqui.metrics" entity-name="MetricsHistogramArtifact">
-        <field name="counterName" type="text-medium" is-pk="true"/>
+    <entity package="moqui.metrics" entity-name="MetricsHitGroupArtifact">
+        <field name="metricName" type="text-medium" is-pk="true"/>
         <field name="artifactType" type="text-medium" is-pk="true"/>
         <field name="artifactName" type="text-medium" is-pk="true"/>
-        <relationship type="one" related="moqui.metrics.MetricsHistogram">
-            <key-map field-name="counterName"/>
+        <relationship type="one" related="moqui.metrics.MetricsHitGroup">
+            <key-map field-name="metricName"/>
         </relationship>
     </entity>
 

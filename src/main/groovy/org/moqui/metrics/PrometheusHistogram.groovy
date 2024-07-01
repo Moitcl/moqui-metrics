@@ -12,7 +12,7 @@ class PrometheusHistogram {
                                                                          [upperBound:(5 as BigDecimal)], [upperBound:(10 as BigDecimal)]]
 
     protected ExecutionContextFactory ecf = null
-    protected String counterName = null
+    protected String metricName = null
     protected List<HistogramArtifact> artifactList = null
     protected Timestamp lastCalculation = null
     protected Timestamp fromDate = null
@@ -25,11 +25,11 @@ class PrometheusHistogram {
 
     protected Long bucketCounterInf = 0 as Long
 
-    PrometheusHistogram(String counterName, ExecutionContextFactory ecf) throws IllegalArgumentException {
+    PrometheusHistogram(String metricName, ExecutionContextFactory ecf) throws IllegalArgumentException {
         this.ecf = ecf
-        if (counterName == null || counterName.length() == 0)
-            throw new IllegalArgumentException("Need to specify counterName")
-        this.counterName = counterName
+        if (metricName == null || metricName.length() == 0)
+            throw new IllegalArgumentException("Need to specify metricName")
+        this.metricName = metricName
         this.artifactList = new LinkedList<HistogramArtifact>()
         lastCalculation = ecf.executionContext.user.nowTimestamp
         this.bucketList = new LinkedList<HistogramBucket>()
@@ -40,7 +40,7 @@ class PrometheusHistogram {
     }
 
     void init() {
-        List<Map> bucketEvList = ecf.entity.find("moqui.metrics.MetricsHistogramBucket").disableAuthz().condition("counterName", counterName).list()
+        List<Map> bucketEvList = ecf.entity.find("moqui.metrics.MetricsHitGroupBucket").disableAuthz().condition("metricName", metricName).list()
         if (!bucketEvList)
             bucketEvList = defaultBucketThresholds
         List<BigDecimal> bucketBoundsToCheck = (List<BigDecimal>)bucketList.collect { it.upperBound }
@@ -60,7 +60,7 @@ class PrometheusHistogram {
             bucketList.remove(bucket)
         }
         List<HistogramArtifact> artifactsToCheck = artifactList.clone()
-        List<EntityValue> artifactEvList = ecf.entity.find("moqui.metrics.MetricsHistogramArtifact").disableAuthz().condition("counterName", counterName).list()
+        List<EntityValue> artifactEvList = ecf.entity.find("moqui.metrics.MetricsHitGroupArtifact").disableAuthz().condition("metricName", metricName).list()
         artifactEvList.each { EntityValue ahMember ->
             HistogramArtifact artifact = artifactList.find { it.artifactName == ahMember.artifactName && it.artifactType == ahMember.artifactType }
             if (artifact)
@@ -95,12 +95,12 @@ class PrometheusHistogram {
     }
 
 
-    String getCounterName() {
-        return counterName
+    String getMetricName() {
+        return metricName
     }
 
-    void setCounterName(String counterName) {
-        this.counterName = counterName
+    void setMetricName(String metricName) {
+        this.metricName = metricName
     }
 
     String getArtifactName() {
@@ -142,25 +142,25 @@ class PrometheusHistogram {
             return null
 
         // Build String
-        StringBuilder sb = new StringBuilder("#HELP moqui_hit_${counterName}_slowhits_total Total number of slow hits seen\n" +
-                "#TYPE moqui_hit_${counterName}_slowhits_total counter\n" +
-                "moqui_hit_${counterName}_slowhits_total  ${slowHitCount} ${nowEpoch}\n" +
-                "#HELP moqui_hit_${counterName}_errors_total Total number of slow hits seen\n" +
-                "#TYPE moqui_hit_${counterName}_errors_total counter\n" +
-                "moqui_hit_${counterName}_errors_total  ${errorCount} ${nowEpoch}\n" +
-                "#HELP moqui_hit_${counterName}_histogram_seconds Histogram with durations of running times in buckets\n" +
-                "#TYPE moqui_hit_${counterName}_histogram_seconds histogram\n" +
-                "moqui_hit_${counterName}_histogram_seconds_sum  ${sum} ${nowEpoch}\n" +
-                "moqui_hit_${counterName}_histogram_seconds_count ${count} ${nowEpoch}\n")
+        StringBuilder sb = new StringBuilder("#HELP moqui_hits_slowhits_total Total number of slow hits seen\n" +
+                "#TYPE moqui_hits_slowhits_total counter\n" +
+                "moqui_hits_slowhits_total {metric_name=\"${metricName}\"} ${slowHitCount} ${nowEpoch}\n" +
+                "#HELP moqui_hits_errors_total Total number of slow hits seen\n" +
+                "#TYPE moqui_hits_errors_total counter\n" +
+                "moqui_hits_errors_total {metric_name=\"${metricName}\"} ${errorCount} ${nowEpoch}\n" +
+                "#HELP moqui_hits_seconds Histogram with durations of running times in buckets\n" +
+                "#TYPE moqui_hits_seconds histogram\n" +
+                "moqui_hits_seconds_sum {metric_name=\"${metricName}\"} ${sum} ${nowEpoch}\n" +
+                "moqui_hits_seconds_count {metric_name=\"${metricName}\"} ${count} ${nowEpoch}\n")
         bucketList.each { HistogramBucket bucket ->
-            List additionalLabelsList = ["le=\"${bucket.getUpperBoundString()}\""]
+            List additionalLabelsList = ["le=\"${bucket.getUpperBoundString()}\", metric_name=\"${metricName}\""]
             bucket.additionalLabels.each { fieldName, fieldValue ->
                 additionalLabelsList.add(fieldName + "=\"" + (fieldValue ? (fieldValue.toString().replace('\\', '\\\\').replace('"', '\\"') + "\"") : "\""))
             }
             String additionalLabelString = additionalLabelsList.join(', ')
-            sb.append("moqui_hit_${counterName}_histogram_seconds_bucket {${additionalLabelString}} ${bucket.getCountString()} ${nowEpoch}\n")
+            sb.append("moqui_hits_seconds_bucket {${additionalLabelString}} ${bucket.getCountString()} ${nowEpoch}\n")
         }
-        sb.append("moqui_hit_${counterName}_histogram_seconds_bucket {le=\"+Inf\"} ${count} ${nowEpoch}\n")
+        sb.append("moqui_hits_seconds_bucket {le=\"+Inf\", metric_name=\"${metricName}\"} ${count} ${nowEpoch}\n")
 
         return sb.toString()
     }
@@ -170,7 +170,7 @@ class PrometheusHistogram {
     }
 
     String toString(String prefix) {
-        StringBuilder sb = new StringBuilder("${prefix ?: ''}- Histogram '${counterName}':\n${prefix ?: ''}Buckets:\n${bucketList ? '' : '<no buckets defined>\n'}")
+        StringBuilder sb = new StringBuilder("${prefix ?: ''}- Histogram '${metricName}':\n${prefix ?: ''}Buckets:\n${bucketList ? '' : '<no buckets defined>\n'}")
         prefix = (prefix ?: '') + '  '
         String subprefix = (prefix ?: '') + '  '
         bucketList.each { sb.append(it.toString(subprefix)) }

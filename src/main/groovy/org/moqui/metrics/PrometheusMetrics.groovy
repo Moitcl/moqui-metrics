@@ -31,12 +31,12 @@ class PrometheusMetrics extends Metrics {
 
     void init(ExecutionContextFactory ecf) {
         this.ecf = ecf
-        List<EntityValue> masList = ecf.entity.find("moqui.metrics.MetricsHistogram").disableAuthz().list()
+        List<EntityValue> masList = ecf.entity.find("moqui.metrics.MetricsHitGroup").disableAuthz().list()
         masList.each { EntityValue mas ->
-            logger.info("Found histogram ${mas.counterName}")
-            PrometheusHistogram hd = histogramList.find { al -> al.counterName == mas.counterName }
+            logger.info("Found histogram ${mas.metricName}")
+            PrometheusHistogram hd = histogramList.find { al -> al.metricName == mas.metricName }
             if (!hd) {
-                hd = new PrometheusHistogram(mas.counterName as String, ecf)
+                hd = new PrometheusHistogram(mas.metricName as String, ecf)
                 histogramList.add(hd)
             }
             hd.init()
@@ -48,7 +48,6 @@ class PrometheusMetrics extends Metrics {
             histogram.registerArtifactHit(artifactType, artifactName, runningTimeMillis, slowHit, wasError)
         }
     }
-
 
     String nextValues() {
         StringBuilder sb = new StringBuilder()

@@ -16,9 +16,9 @@ This property can be set using java properties, environment vars or direct confi
 
 ## Exporting metrics for Artifacts
 
-Metrics for Artifacts are exported using the [prometheus histogram](https://prometheus.io/docs/practices/histograms/) type. You can create differente histogram counters by adding
-values to the `moqui.metrics.MetricsHistogram` entity, and associating one or more artifacts to this counter using the `moqui.metrics.MetricsHistogramArtifact` entry. By default,
-for durations of 5, 10, 25, 50, 100, 250, 500, 1000, 3000, 5000 and 10000 ms are created, but you may specify custom buckets using the `moqui.metrics.MetricsHistogramBucket`
+Metrics for Artifacts are exported using the [prometheus histogram](https://prometheus.io/docs/practices/histograms/) type. You can create different histogram groups by adding
+values to the `moqui.metrics.MetricsHitGroup` entity, and associating one or more artifacts to this counter using the `moqui.metrics.MetricsHitGroupArtifact` entry. By default,
+for durations of 5, 10, 25, 50, 100, 250, 500, 1000, 3000, 5000 and 10000 ms are created, but you may specify custom buckets using the `moqui.metrics.MetricsHitGroupBucket`
 entity.
 
 The values for `artifactType` and `artifactName` should be the same than used in the `moqui.server.ArtifactHit` entity.
