@@ -132,6 +132,13 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="jobRunnerJobRunTotal" from="jobRunner.getTotalJobsRun()" type="String"/>
             <set field="jobRunnerLastJobsActive" from="jobRunner.getLastJobsActive()" type="String"/>
             <set field="jobRunnerLastJobsPaused" from="jobRunner.getLastJobsPaused()" type="String"/>
+            <set field="jobWorkerPool" from="ec.service.jobWorkerPool"/>
+             <script>
+                 MNode serviceFacadeNode = ec.factory.confXmlRoot.first("service-facade")
+                 jobQueueMax = (serviceFacadeNode.attribute("job-queue-max") ?: "0") as int
+             </script>
+            <set field="jobRunnerJobsRunning" from="jobWorkerPool.getActiveCount() + jobWorkerPool.queue.size()"/>
+            <set field="jobRunnerJobSlots" from="jobQueueMax + jobWorkerPool.getMaximumPoolSize()"/>
 
             <set field="dataSources" from="[]"/>
             <iterate list="ec.entity.getDataSourcesInfo()" entry="dataSource">
@@ -321,6 +328,12 @@ moqui_jobrunner_last_active ${jobRunnerLastJobsActive} ${queryTimestamp}
 #HELP moqui_jobrunner_last_paused Number of jobs paused at last execution
 #TYPE moqui_jobrunner_last_paused gauge
 moqui_jobrunner_last_paused ${jobRunnerLastJobsPaused} ${queryTimestamp}
+#HELP moqui_jobrunner_jobs_running Number of Service Jobs currently running
+#TYPE moqui_jobrunner_jobs_running gauge
+moqui_jobrunner_jobs_running ${jobRunnerJobsRunning} ${queryTimestamp}
+#HELP moqui_jobrunner_slots Number of slots available for running Service Jobs
+#TYPE moqui_jobrunner_slots counter
+moqui_jobrunner_slots ${jobRunnerJobSlots} ${queryTimestamp}
 
 ${hitStatString}
 
