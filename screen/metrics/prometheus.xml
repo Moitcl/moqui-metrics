@@ -216,6 +216,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="ec.factory.getToolFactory('Metrics')">
                 <set field="hitStatString" from="ec.getTool('Metrics', null).nextValues()"/>
             </if>
+            <if condition="hitStatString == null"><set field="hitStatString" value=""/></if>
         </if>
 
     </actions>
