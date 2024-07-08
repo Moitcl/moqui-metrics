@@ -43,7 +43,7 @@ class PrometheusMetrics extends Metrics {
         }
     }
 
-    void registerArtifactHit(String artifactType, String artifactName, BigDecimal runningTimeMillis, String slowHit, String wasError) {
+    void registerArtifactHit(String artifactType, String artifactName, BigDecimal runningTimeMillis, Character slowHit, String wasError) {
         histogramList.each { PrometheusHistogram histogram ->
             histogram.registerArtifactHit(artifactType, artifactName, runningTimeMillis, slowHit, wasError)
         }

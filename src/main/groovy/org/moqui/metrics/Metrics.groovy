@@ -8,7 +8,7 @@ abstract class Metrics {
 
     abstract void init(ExecutionContextFactory ecf)
 
-    abstract void registerArtifactHit(String artifactType, String artifactName, BigDecimal runningTimeMillis, String slowHit, String wasError)
+    abstract void registerArtifactHit(String artifactType, String artifactName, BigDecimal runningTimeMillis, Character slowHit, String wasError)
 
     abstract String nextValues()
 

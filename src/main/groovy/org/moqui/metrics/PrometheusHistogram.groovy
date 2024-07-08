@@ -71,7 +71,7 @@ class PrometheusHistogram {
         artifactsToCheck.each { artifactList.remove(it) }
     }
 
-    void registerArtifactHit(String artifactType, String artifactName, BigDecimal runningTimeMillis, String slowHit, String wasError) {
+    void registerArtifactHit(String artifactType, String artifactName, BigDecimal runningTimeMillis, Character slowHit, String wasError) {
         boolean matches = false
         for (HistogramArtifact ha in artifactList) {
             if (ha.artifactType == artifactType && ha.artifactName == artifactName) {

@@ -51,20 +51,4 @@
         </actions>
     </service>
     
-    <service verb="register" noun="ArtifactHit" authenticate="anonymous-all">
-        <in-parameters>
-            <parameter name="artifactType" required="true"/>
-            <parameter name="artifactName" required="true"/>
-            <parameter name="runningTimeMillis" type="BigDecimal" required="true"/>
-            <parameter name="isSlowHit" required="true"/>
-            <parameter name="wasError" required="true"/>
-        </in-parameters>
-        <actions>
-            <if condition="!artifactType || !artifactName"><return/></if>
-            <if condition="ec.factory.getToolFactory('Metrics')">
-                <script>ec.getTool("Metrics", null).registerArtifactHit(artifactType, artifactName, runningTimeMillis, isSlowHit, wasError)</script>
-            </if>
-        </actions>
-    </service>
-
 </services>

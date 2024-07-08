@@ -25,7 +25,12 @@ along with this software (see the LICENSE.md file). If not, see
     </eeca>
 
     <eeca id="MetricsHitRegistration" entity="moqui.server.ArtifactHit" on-create="true" get-entire-entity="true">
-        <actions><service-call name="moqui.metrics.MetricsServices.register#ArtifactHit" in-map="context" disable-authz="true"/></actions>
+        <actions>
+            <if condition="!artifactType || !artifactName"><return/></if>
+            <if condition="ec.factory.getToolFactory('Metrics')">
+                <script>ec.getTool("Metrics", null).registerArtifactHit(artifactType, artifactName, runningTimeMillis, isSlowHit, wasError)</script>
+            </if>
+        </actions>
     </eeca>
 
 </eecas>
