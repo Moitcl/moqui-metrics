@@ -2,6 +2,35 @@
 
 A module for [moqui-framework](https://github.com/moqui/moqui-framework) to make metrics available to monitoring tools, like [Prometheus](https://prometheus.io/).
 
+# Sample Grafana Dashboard
+
+See sample Grafana Dashboard in file `grafana/MoquiDashboard.json`, which includes visualizations like following:
+
+## Restart-OOM and Throughput
+
+![Restart-OOM and Throughput-Performance](grafana/screenshots/Restart-OOMAndThroughput-Performance.png)
+
+## Resource Usage
+
+![Resource Usage](grafana/screenshots/ResourceUsage.png)
+
+## Memory Visualizations
+
+Complete for several namespaces
+
+![Memory Visualizations complete](grafana/screenshots/MemoryVisualizationsComplete.png)
+
+And filtered by specific namespace
+
+![Memory Visualizations filtered](grafana/screenshots/MemoryVisualizationsFiltered.png)
+
+## Artifact Versions
+
+See which specific commits were running in a specific pod at a given time.
+
+![Artifact Versions](grafana/screenshots/ArtifactVersions.png)
+
+
 # Supported Monitoring Tools
 
 Currently, only Prometheus is supported. The URL to be used as target is the `/metrics/prometheus` path of your publically reachable moqui instance. If in your configuration the
@@ -74,3 +103,4 @@ spec:
     matchLabels:
       app: moqui
 ```
+
