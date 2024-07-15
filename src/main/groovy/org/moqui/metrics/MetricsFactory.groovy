@@ -26,16 +26,11 @@ class MetricsFactory implements ToolFactory<Metrics> {
     }
 
     @Override
-    void preFacadeInit(ExecutionContextFactory ecf) {
-    }
+    void preFacadeInit(ExecutionContextFactory ecf) { }
 
     @Override
-    void destroy() {
-        super.destroy()
-    }
+    void destroy() { }
 
     @Override
-    void postFacadeDestroy() {
-        super.postFacadeDestroy()
-    }
+    void postFacadeDestroy() { }
 }
