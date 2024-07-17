@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-facade-xml type="demo">
+
+    <!-- Note: these will currently only work if ArtifactHit tracking is enabled for the included artifacts -->
+    <!-- expose hits to selected User Screens (currently "Marble ERP" and "My Account" screens) as "userscreens" metric -->
+    <moqui.metrics.MetricsHitGroup metricName="userscreens" description="User Screens">
+        <artifact artifactType="AT_XML_SCREEN" artifactName="component://MarbleERP/screen/marble.xml"/>
+        <artifact artifactType="AT_XML_SCREEN" artifactName="component://SimpleScreens/screen/MyAccount.xml"/>
+    </moqui.metrics.MetricsHitGroup>
+
+    <!-- expose hits to selected Admin Screens (currently "Tools" and "System" screens) as "adminscreens" metric -->
+    <moqui.metrics.MetricsHitGroup metricName="adminscreens" description="Admin Screens">
+        <artifact artifactType="AT_XML_SCREEN" artifactName="component://tools/screen/Tools.xml"/>
+        <artifact artifactType="AT_XML_SCREEN" artifactName="component://tools/screen/System.xml"/>
+    </moqui.metrics.MetricsHitGroup>
+
+    <!-- expose hits to Rest Paths (currently "moqui" and "mantle" paths) as "restpaths" metric -->
+    <moqui.metrics.MetricsHitGroup metricName="restpaths" description="REST API Paths">
+        <artifact artifactType="AT_REST_PATH" artifactName="/moqui"/>
+        <artifact artifactType="AT_REST_PATH" artifactName="/mantle"/>
+    </moqui.metrics.MetricsHitGroup>
+
+</entity-facade-xml>

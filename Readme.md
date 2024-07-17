@@ -53,6 +53,7 @@ entity.
 The values for `artifactType` and `artifactName` should be the same than used in the `moqui.server.ArtifactHit` entity.
 
 For example, in order to export all accesses to the Tools app, the `artifactType` would be set to `AT_XML_SCREEN` and the `artifactName` to `component://tools/screen/Tools.xml`
+See [MetricsHitGroupDemoData](data/MetricsHitGroupDemoData.xml) for details.
 
 ## Prometheus
 
